@@ -29,7 +29,10 @@ class DeepCE(nn.Module):
             self.pert_type_embed = nn.Linear(pert_type_input_dim, pert_type_emb_dim)
             self.linear_dim += pert_type_emb_dim
         if self.use_cell_id:
-            self.cell_id_embed = nn.Linear(cell_id_input_dim, cell_id_emb_dim)
+            self.cell_id_1 = nn.Linear(cell_id_input_dim, cell_id_emb_dim)
+            self.cell_id_2 = nn.Linear(cell_id_emb_dim, cell_id_emb_dim)
+            self.cell_id_3 = nn.Linear(cell_id_emb_dim, cell_id_emb_dim)
+            self.cell_id_embed = nn.Sequential(self.cell_id_1)
             self.linear_dim += cell_id_emb_dim
         if self.use_pert_idose:
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
