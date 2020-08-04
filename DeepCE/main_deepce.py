@@ -1,5 +1,6 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import pandas as pd
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import sys
 from datetime import datetime
 import torch
@@ -10,6 +11,15 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/utils')
 import deepce
 import datareader
 import metric
+import wandb
+
+USE_wandb = True
+if USE_wandb:
+    wandb.init(project="Drug_response"+setting.data_specific)
+else:
+    os.environ["WANDB_MODE"] = "dryrun"
+
+test_data = True
 
 start_time = datetime.now()
 
@@ -66,19 +76,25 @@ print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
 
+if test_data:
+    cell_id_input_dim = 978
+else:
+    cell_id_input_dim = len(filter['cell_id'])
 
 # model creation
 model = deepce.DeepCE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
                       conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
                       gene_emb_dim=gene_embed_dim, num_gene=np.shape(data.gene)[0], hid_dim=hid_dim, dropout=dropout,
                       loss_type=loss_type, device=device, initializer=intitializer,
-                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=len(filter['cell_id']),
+                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=cell_id_input_dim,
                       pert_idose_input_dim=len(filter['pert_idose']), pert_type_emb_dim=pert_type_emb_dim,
                       cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
                       use_pert_idose=data.use_pert_idose)
 model.to(device)
 model = model.double()
+if USE_wandb:
+     wandb.watch(model, log="all")
 
 # training
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
@@ -121,6 +137,7 @@ for epoch in range(max_epoch):
         epoch_loss += loss.item()
     print('Train loss:')
     print(epoch_loss/(i+1))
+    wandb.log({'Train loss': epoch_loss/(i+1)}, step = epoch)
 
     model.eval()
 
@@ -151,20 +168,26 @@ for epoch in range(max_epoch):
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
         print('Dev loss:')
         print(epoch_loss / (i + 1))
+        wandb.log({'Dev loss': epoch_loss/(i+1)}, step=epoch)
         rmse = metric.rmse(lb_np, predict_np)
         rmse_list_dev.append(rmse)
         print('RMSE: %.4f' % rmse)
+        wandb.log({'Dev RMSE': rmse}, step=epoch)
         pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_list_dev.append(pearson)
         print('Pearson\'s correlation: %.4f' % pearson)
+        wandb.log({'Pearson': pearson}, step = epoch)
         spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_list_dev.append(spearman)
         print('Spearman\'s correlation: %.4f' % spearman)
+        wandb.log({'Spearman': spearman}, step = epoch)
         precision = []
         for k in precision_degree:
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Precision@%d Negative: %.4f" % (k, precision_neg))
+            wandb.log({'Precision Positive@{0!r}'.format(k): precision_pos})
+            wandb.log({'Precision Negative@{0!r}'.format(k): precision_neg})
             precision.append([precision_pos, precision_neg])
         precisionk_list_dev.append(precision)
 
