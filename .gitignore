@@ -1,3 +1,4 @@
+script/wandb/
 *.pyc
 .DS_Store
 .idea/*

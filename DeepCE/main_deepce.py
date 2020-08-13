@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 import sys
 from datetime import datetime
 import torch
@@ -12,14 +12,14 @@ import deepce
 import datareader
 import metric
 import wandb
+import pdb
+from allrank.models.losses import approxNDCGLoss
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="Drug_response"+setting.data_specific)
+    wandb.init(project="DeepCE")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
-
-test_data = True
 
 start_time = datetime.now()
 
@@ -52,15 +52,16 @@ conv_size = [16, 16]
 degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
-cell_id_emb_dim = 4
+cell_id_emb_dim = 32
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
 precision_degree = [10, 20, 50, 100]
-loss_type = 'point_wise_mse'
+loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg'
 intitializer = torch.nn.init.xavier_uniform_
 filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
-          "cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
+          #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
+          "cell_id": ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC'],
           "pert_idose": ["0.04 um", "0.12 um", "0.37 um", "1.11 um", "3.33 um", "10.0 um"]}
 
 # check cuda
@@ -76,17 +77,12 @@ print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
 
-if test_data:
-    cell_id_input_dim = 978
-else:
-    cell_id_input_dim = len(filter['cell_id'])
-
 # model creation
 model = deepce.DeepCE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
                       conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
                       gene_emb_dim=gene_embed_dim, num_gene=np.shape(data.gene)[0], hid_dim=hid_dim, dropout=dropout,
                       loss_type=loss_type, device=device, initializer=intitializer,
-                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=cell_id_input_dim,
+                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=2176,
                       pert_idose_input_dim=len(filter['pert_idose']), pert_type_emb_dim=pert_type_emb_dim,
                       cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
@@ -131,6 +127,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+        #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
         optimizer.step()

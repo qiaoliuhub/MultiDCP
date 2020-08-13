@@ -4,7 +4,8 @@ from neural_fingerprint import NeuralFingerprint
 from drug_gene_attention import DrugGeneAttention
 from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_wise_ranknet, list_wise_rankcosine, \
     list_wise_ndcg, combine_loss
-
+import pdb
+from reformer_pytorch import Reformer
 
 class DeepCE(nn.Module):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
@@ -29,10 +30,20 @@ class DeepCE(nn.Module):
             self.pert_type_embed = nn.Linear(pert_type_input_dim, pert_type_emb_dim)
             self.linear_dim += pert_type_emb_dim
         if self.use_cell_id:
-            self.cell_id_1 = nn.Linear(cell_id_input_dim, cell_id_emb_dim)
-            self.cell_id_2 = nn.Linear(cell_id_emb_dim, cell_id_emb_dim)
-            self.cell_id_3 = nn.Linear(cell_id_emb_dim, cell_id_emb_dim)
-            self.cell_id_embed = nn.Sequential(self.cell_id_1)
+            #self.cell_id_2 = nn.Linear(100, cell_id_emb_dim)
+            self.cell_id_1 = nn.Linear(cell_id_input_dim, 200)
+            self.cell_id_2 = nn.Linear(200, 100)
+            self.cell_id_3 = nn.Linear(100, cell_id_emb_dim)
+            self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, self.cell_id_2, self.cell_id_3)
+            
+            self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 50))
+            self.trans_cell_embed_dim = 32
+            self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
+            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8, dim_feedforward = self.trans_cell_embed_dim * 4)
+            self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
+            self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
+            self.post_re_linear_2 = nn.Linear(32, 978)
+            self.expand_to_num_gene = nn.Linear(50, 978)
             self.linear_dim += cell_id_emb_dim
         if self.use_pert_idose:
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
@@ -88,12 +99,22 @@ class DeepCE(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
-            cell_id_embed = self.cell_id_embed(input_cell_id)
+            ### cell_id_embed = self.cell_id_embed(input_cell_id)
+            ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
-            cell_id_embed = cell_id_embed.unsqueeze(1)
-            # cell_id_embed = [batch * 1 * cell_id_emb_dim]
-            cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
+            cell_id_embed = input_cell_id
+            cell_id_embed = cell_id_embed.unsqueeze(-1)
+            # cell_id_embed = [batch * cell_id_emb_dim * 1]
+            ## cell_id_embed = cell_id_embed.unsqueeze(1)
+            ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
+            cell_id_embed = self.cell_id_embed_1(cell_id_embed)
+            cell_id_embed = self.cell_id_reformer(cell_id_embed).transpose(-1,-2)
+            ### cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed)
+            ### cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2)
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
+            cell_id_embed = self.post_re_linear_1(cell_id_embed).transpose(-1,-2)
+            cell_id_embed = self.post_re_linear_2(cell_id_embed).transpose(-1,-2)
+            ### cell_id_embed = self.cell_id_embed(cell_id_embed)
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2)
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)

@@ -114,7 +114,9 @@ def read_data(input_file, filter):
 
 def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feature_test, label_test, drug,
                         device):
-    cell_line_expression_feature_csv = pd.read_csv('/workspace/DeepCE/DeepCE/data/high_confidence_11_cell_lines_ctrl.csv', index_col = 0)
+    file_name = 'ccle_gene_expression_file.csv'
+    file_name = 'ccle_gene_expression_2176.csv'
+    cell_line_expression_feature_csv = pd.read_csv('/workspace/DeepCE/DeepCE/data/' + file_name, index_col = 0)
     train_drug_feature = []
     dev_drug_feature = []
     test_drug_feature = []
@@ -178,8 +180,6 @@ def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feat
             pert_type_feature[pert_type_dict[ft[1]]] = 1
             dev_pert_type_feature.append(np.array(pert_type_feature, dtype=np.float64))
         if use_cell_id:
-            # cell_id_feature = np.zeros(len(cell_id_set))
-            # cell_id_feature[cell_id_dict[ft[2]]] = 1
             cell_id_feature = cell_line_expression_feature_csv.loc[ft[2],:]
             dev_cell_id_feature.append(np.array(cell_id_feature, dtype=np.float64))
         if use_pert_idose:
@@ -195,8 +195,6 @@ def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feat
             pert_type_feature[pert_type_dict[ft[1]]] = 1
             test_pert_type_feature.append(np.array(pert_type_feature, dtype=np.float64))
         if use_cell_id:
-            # cell_id_feature = np.zeros(len(cell_id_set))
-            # cell_id_feature[cell_id_dict[ft[2]]] = 1
             cell_id_feature = cell_line_expression_feature_csv.loc[ft[2],:]
             test_cell_id_feature.append(np.array(cell_id_feature, dtype=np.float64))
         if use_pert_idose:
