@@ -13,7 +13,7 @@ class DeepCESub(nn.Module):
                  cell_id_input_dim=None, pert_idose_input_dim=None,
                  pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
                  use_cell_id=False, use_pert_idose=False):
-        super(DeepCE, self).__init__()
+        super(DeepCESub, self).__init__()
         assert drug_emb_dim == gene_emb_dim, 'Embedding size mismatch'
         self.use_pert_type = use_pert_type
         self.use_cell_id = use_cell_id
@@ -98,6 +98,7 @@ class DeepCESub(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
+            pdb.set_trace()
             cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
             ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
@@ -139,7 +140,7 @@ class DeepCE(nn.Module):
         super(DeepCE, self).__init__()
         self.sub_deepce = DeepCESub(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
-                 cell_id_input_dim=cell_id_emb_dim, pert_idose_input_dim=pert_type_input_dim,
+                 cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_type_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.loss_type = loss_type
