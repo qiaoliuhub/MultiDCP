@@ -99,22 +99,22 @@ class DeepCE(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
-            ### cell_id_embed = self.cell_id_embed(input_cell_id)
+            cell_id_embed = self.cell_id_embed(input_cell_id)
             ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
-            cell_id_embed = input_cell_id
+            #### cell_id_embed = input_cell_id
             cell_id_embed = cell_id_embed.unsqueeze(-1)
             # cell_id_embed = [batch * cell_id_emb_dim * 1]
             ## cell_id_embed = cell_id_embed.unsqueeze(1)
             ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
             cell_id_embed = self.cell_id_embed_1(cell_id_embed)
-            cell_id_embed = self.cell_id_reformer(cell_id_embed).transpose(-1,-2)
-            ### cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed)
-            ### cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2)
+            #### cell_id_embed = self.cell_id_reformer(cell_id_embed).transpose(-1,-2)
+            cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed)
+            cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2)
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
-            cell_id_embed = self.post_re_linear_1(cell_id_embed).transpose(-1,-2)
-            cell_id_embed = self.post_re_linear_2(cell_id_embed).transpose(-1,-2)
-            ### cell_id_embed = self.cell_id_embed(cell_id_embed)
+            #### cell_id_embed = self.post_re_linear_1(cell_id_embed).transpose(-1,-2)
+            #### cell_id_embed = self.post_re_linear_2(cell_id_embed).transpose(-1,-2)
+            #### cell_id_embed = self.cell_id_embed(cell_id_embed)
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2)
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)

@@ -15,7 +15,7 @@ import wandb
 import pdb
 from allrank.models.losses import approxNDCGLoss
 
-USE_wandb = True
+USE_wandb = False
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
@@ -82,7 +82,7 @@ model = deepce.DeepCE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim
                       conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
                       gene_emb_dim=gene_embed_dim, num_gene=np.shape(data.gene)[0], hid_dim=hid_dim, dropout=dropout,
                       loss_type=loss_type, device=device, initializer=intitializer,
-                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=2176,
+                      pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=978,
                       pert_idose_input_dim=len(filter['pert_idose']), pert_type_emb_dim=pert_type_emb_dim,
                       cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
