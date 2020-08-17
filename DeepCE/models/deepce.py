@@ -7,7 +7,7 @@ from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_
 import pdb
 from reformer_pytorch import Reformer
 
-class DeepCE(nn.Module):
+class DeepCESub(nn.Module):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
@@ -49,7 +49,6 @@ class DeepCE(nn.Module):
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
             self.linear_dim += pert_idose_emb_dim
         self.linear_1 = nn.Linear(self.linear_dim, hid_dim)
-        self.linear_2 = nn.Linear(hid_dim, 1)
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
         self.num_gene = num_gene
@@ -99,23 +98,23 @@ class DeepCE(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
-            cell_id_embed = self.cell_id_embed(input_cell_id)
+            cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
             ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
             #### cell_id_embed = input_cell_id
-            cell_id_embed = cell_id_embed.unsqueeze(-1)
+            cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
             # cell_id_embed = [batch * cell_id_emb_dim * 1]
             ## cell_id_embed = cell_id_embed.unsqueeze(1)
             ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
-            cell_id_embed = self.cell_id_embed_1(cell_id_embed)
+            cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
             #### cell_id_embed = self.cell_id_reformer(cell_id_embed).transpose(-1,-2)
-            cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed)
-            cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2)
+            cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
+            cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
             #### cell_id_embed = self.post_re_linear_1(cell_id_embed).transpose(-1,-2)
             #### cell_id_embed = self.post_re_linear_2(cell_id_embed).transpose(-1,-2)
             #### cell_id_embed = self.cell_id_embed(cell_id_embed)
-            drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2)
+            drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)
             # pert_idose_embed = [batch * pert_idose_emb_dim]
@@ -129,13 +128,40 @@ class DeepCE(nn.Module):
         # drug_gene_embed = [batch * num_gene * (drug_embed + gene_embed + pert_type_embed + cell_id_embed + pert_idose_embed)]
         out = self.linear_1(drug_gene_embed)
         # out = [batch * num_gene * hid_dim]
-        out = self.relu(out)
-        # out = [batch * num_gene * hid_dim]
-        out = self.linear_2(out)
-        # out = [batch * num_gene * 1]
-        out = out.squeeze(2)
-        # out = [batch * num_gene]
         return out
+
+class DeepCE(nn.Module):
+    def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
+                 cell_id_input_dim=None, pert_idose_input_dim=None,
+                 pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
+                 use_cell_id=False, use_pert_idose=False):
+        super(DeepCE, self).__init__()
+        self.sub_deepce = DeepCESub(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
+                 cell_id_input_dim=cell_id_emb_dim, pert_idose_input_dim=pert_type_input_dim,
+                 pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
+                 use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.loss_type = loss_type
+        self.initializer = initializer
+        self.device = device
+        # self.init_weights()
+
+    def init_weights(self):
+        if self.initializer is None:
+            return
+        for name, parameter in self.named_parameters():
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
+
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
+        # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
+        # gene_embed = [num_gene * gene_emb_dim]
+        # out = [batch * num_gene * hid_dim]
+        return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
 
     def loss(self, label, predict):
         if self.loss_type == 'point_wise_mse':
@@ -155,3 +181,31 @@ class DeepCE(nn.Module):
         else:
             raise ValueError('Unknown loss: %s' % self.loss_type)
         return loss
+
+class DeepCEPretraining(DeepCE):
+
+    def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
+                 cell_id_input_dim=None, pert_idose_input_dim=None,
+                 pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
+                 use_cell_id=False, use_pert_idose=False):
+        super(DeepCEPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
+                 cell_id_input_dim=cell_id_emb_dim, pert_idose_input_dim=pert_type_input_dim,
+                 pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
+                 use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.relu = nn.ReLU()
+        self.linear_2 = nn.Linear(hid_dim, 1)
+        super().init_weights()
+
+    def froward():
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        # out = [batch * num_gene * hid_dim]
+        out = self.relu(out)
+        # out = [batch * num_gene * hid_dim]
+        out = self.linear_2(out)
+        # out = [batch * num_gene * 1]
+        out = out.squeeze(2)
+        # out = [batch * num_gene]
+        return out
+        
