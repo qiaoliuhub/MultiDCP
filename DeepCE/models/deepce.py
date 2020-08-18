@@ -223,8 +223,18 @@ class DeepCEPretraining(DeepCE):
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
         self.linear_2 = nn.Linear(hid_dim, 2)
-        self.task_1_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), nn.ReLU(), nn.Linear(hid_dim//2, 1))
-        self.task_2_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), nn.ReLU(), nn.Linear(hid_dim//2, 1))
+        self.task_1_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), 
+                                            nn.ReLU(), 
+                                            nn.Linear(hid_dim//2, hid_dim//2),
+                                            nn.ReLU(),
+                                            nn.Linear(hid_dim//2, 1)
+                                            )
+        self.task_2_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), 
+                                            nn.ReLU(), 
+                                            nn.Linear(hid_dim//2, hid_dim//2),
+                                            nn.ReLU(),
+                                            nn.Linear(hid_dim//2, 1)
+                                            )
         super().init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
