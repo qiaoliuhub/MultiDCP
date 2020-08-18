@@ -223,6 +223,8 @@ class DeepCEPretraining(DeepCE):
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
         self.linear_2 = nn.Linear(hid_dim, 2)
+        self.task_1_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), nn.ReLU(), nn.Linear(hid_dim//2, 1))
+        self.task_2_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), nn.ReLU(), nn.Linear(hid_dim//2, 1))
         super().init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
@@ -232,7 +234,11 @@ class DeepCEPretraining(DeepCE):
         # out = [batch * num_gene * hid_dim]
         out = torch.sum(out, dim=1).squeeze(1)
         # out = [batch * 1 * hid_dim] => [batch * hid_dim] 
-        out = self.linear_2(out)
-        # out = [batch * 2] (auc and pic50)
+        out_1 = self.task_1_linear(out)
+        # out_1 = [batch * 1] (pic50)
+        out_2 = self.task_2_linear(out)
+        # out_1 = [batch * 1] (auc)
+        out = torch.cat((out_1, out_2), dim=1)
+        # out = [batch * 2] (pic50 and auc)
         return out
         
