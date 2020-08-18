@@ -58,6 +58,7 @@ class DeepCESub(nn.Module):
         self.init_weights()
 
     def init_weights(self):
+        print('Initialized deepce sub\'s weight............')
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
@@ -148,6 +149,7 @@ class DeepCE(nn.Module):
         # self.init_weights()
 
     def init_weights(self):
+        print('Initialized deepce\'s weight............')
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
@@ -196,7 +198,7 @@ class DeepCEOriginal(DeepCE):
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
         self.linear_2 = nn.Linear(hid_dim, 1)
-        super().init_weights()
+        self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
         out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
@@ -208,7 +210,13 @@ class DeepCEOriginal(DeepCE):
         out = out.squeeze(2)
         # out = [batch * num_gene]
         return out
-        
+    
+    def init_weights(self):
+        print('Initialized deepce original\'s weight............')
+        super().init_weights()
+        print('load old model')
+        self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
+
 class DeepCEPretraining(DeepCE):
 
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
