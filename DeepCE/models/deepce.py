@@ -189,7 +189,7 @@ class DeepCEOriginal(DeepCE):
                  cell_id_input_dim=None, pert_idose_input_dim=None,
                  pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
                  use_cell_id=False, use_pert_idose=False):
-        super(DeepCEPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+        super(DeepCEOriginal, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
                  cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
