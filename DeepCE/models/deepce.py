@@ -182,14 +182,14 @@ class DeepCE(nn.Module):
             raise ValueError('Unknown loss: %s' % self.loss_type)
         return loss
 
-class DeepCEPretraining(DeepCE):
+class DeepCEOriginal(DeepCE):
 
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
                  pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
                  use_cell_id=False, use_pert_idose=False):
-        super(DeepCEPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+        super(DeepCEOriginal, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
                  cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
@@ -207,5 +207,32 @@ class DeepCEPretraining(DeepCE):
         # out = [batch * num_gene * 1]
         out = out.squeeze(2)
         # out = [batch * num_gene]
+        return out
+        
+class DeepCEPretraining(DeepCE):
+
+    def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
+                 cell_id_input_dim=None, pert_idose_input_dim=None,
+                 pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
+                 use_cell_id=False, use_pert_idose=False):
+        super(DeepCEPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
+                 cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
+                 pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
+                 use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.relu = nn.ReLU()
+        self.linear_2 = nn.Linear(hid_dim, 2)
+        super().init_weights()
+
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        # out = [batch * num_gene * hid_dim]
+        out = self.relu(out)
+        # out = [batch * num_gene * hid_dim]
+        out = torch.sum(out, dim=1).squeeze(1)
+        # out = [batch * 1 * hid_dim] => [batch * hid_dim] 
+        out = self.linear_2(out)
+        # out = [batch * 2] (auc and pic50)
         return out
         
