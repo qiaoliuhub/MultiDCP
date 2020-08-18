@@ -78,7 +78,7 @@ print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
 
 # model creation
-model = deepce.DeepCEPretraining(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
+model = deepce.DeepCEOriginal(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
                       conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
                       gene_emb_dim=gene_embed_dim, num_gene=np.shape(data.gene)[0], hid_dim=hid_dim, dropout=dropout,
                       loss_type=loss_type, device=device, initializer=intitializer,
