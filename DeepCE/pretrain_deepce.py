@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 from datetime import datetime
 import torch
+from torch import save
 import numpy as np
 import argparse
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/models')
@@ -223,6 +224,8 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_pic50 < pearson_pic50:
             best_dev_pearson_pic50 = pearson_pic50
+            save(model.sub_deepce.state_dict(), 'best_mode_storage_')
+            print('==========================Best mode saved =====================')
         if best_dev_pearson_auc < pearson_auc:
             best_dev_pearson_auc = pearson_auc
 
