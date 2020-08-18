@@ -36,7 +36,10 @@ def correlation(label_test, label_predict, correlation_type):
     else:
         raise ValueError("Unknown correlation type: %s" % correlation_type)
     score = []
-    for lb_test, lb_predict in zip(label_test, label_predict):
-        score.append(corr(lb_test, lb_predict)[0])
+    if len(label_test.shape) == 1:
+        score.append(corr(label_test, label_predict)[0])
+    else:
+        for lb_test, lb_predict in zip(label_test, label_predict):
+            score.append(corr(lb_test, lb_predict)[0])
     return np.mean(score), score
 

@@ -17,7 +17,7 @@ import pdb
 from allrank.models.losses import approxNDCGLoss
 import pickle
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
