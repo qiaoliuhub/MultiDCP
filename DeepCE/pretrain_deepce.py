@@ -117,7 +117,8 @@ pearson_raw_list = []
 for epoch in range(max_epoch):
     print("Iteration %d:" % (epoch+1))
     model.train()
-    epoch_loss = 0
+    epoch_loss_pic50 = 0
+    epoch_loss_auc = 0
     for i, batch in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         ft, lb = batch
         drug = ft['drug']
@@ -153,7 +154,8 @@ for epoch in range(max_epoch):
 
     model.eval()
 
-    epoch_loss = 0
+    epoch_loss_pic50 = 0
+    epoch_loss_auc = 0
     lb_np = np.empty([0, 2])
     predict_np = np.empty([0, 2])
     with torch.no_grad():
@@ -224,7 +226,8 @@ for epoch in range(max_epoch):
         if best_dev_pearson_auc < pearson_auc:
             best_dev_pearson_auc = pearson_auc
 
-    epoch_loss = 0
+    epoch_loss_pic50 = 0
+    epoch_loss_auc = 0
     lb_np = np.empty([0, 2])
     predict_np = np.empty([0, 2])
     with torch.no_grad():
