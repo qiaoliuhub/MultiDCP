@@ -15,7 +15,7 @@ import wandb
 import pdb
 from allrank.models.losses import approxNDCGLoss
 
-USE_wandb = True
+USE_wandb = False
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
@@ -111,7 +111,7 @@ precisionk_list_test = []
 pearson_raw_list = []
 for epoch in range(max_epoch):
 
-    if str(epoch) is in unfreeze_steps:
+    if str(epoch) in unfreeze_steps:
         number_layer_to_unfreeze = 3 - unfreeze_steps[::-1].index(str(epoch)) ## find the position of last occurance of number epoch
         unfreeze_pattern[3-number_layer_to_unfreeze:] = True
         model.gradual_unfreezing(unfreeze_pattern)
