@@ -124,7 +124,7 @@ class DeepCESub(nn.Module):
         return out
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True]):
-        ### steps_pattern is a list a Three boolean value to indicate whether each layer should be frozen
+        ### unfreeze_pattern is a list a Three boolean value to indicate whether each layer should be frozen
         assert len(unfreeze_pattern) == 3, "number of boolean values doesn't match with the number of layers"
         if unfreeze_pattern[0]:
             print("All layers are unfrozen")
@@ -238,9 +238,9 @@ class DeepCEOriginal(DeepCE):
         #    param.requires_grad = False
     
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
-        assert len(unfreeze_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
-        if sum(steps_pattern[:3]) or steps_pattern[3]: ### either one of the first three boolean values in steps_pattern is True
+        if sum(unfreeze_pattern[:3]) or unfreeze_pattern[3]: ### either one of the first three boolean values in unfreeze_pattern is True
             for name, parameter in self.linear_2.named_parameters():
                 parameter.requires_grad = True
         else:
@@ -291,7 +291,7 @@ class DeepCEPretraining(DeepCE):
         return out
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
-        assert len(unfreeze_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
