@@ -114,7 +114,8 @@ for epoch in range(max_epoch):
 
     if str(epoch) in unfreeze_steps:
         number_layer_to_unfreeze = 3 - unfreeze_steps[::-1].index(str(epoch)) ## find the position of last occurance of number epoch
-        unfreeze_pattern[3-number_layer_to_unfreeze:] = True
+        for i in range(3-number_layer_to_unfreeze,4):
+            unfreeze_pattern[i] = True 
         model.gradual_unfreezing(unfreeze_pattern)
 
     print("Iteration %d:" % (epoch+1))
