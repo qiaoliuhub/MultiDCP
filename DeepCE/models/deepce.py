@@ -40,9 +40,6 @@ class DeepCESub(nn.Module):
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
             self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8, dim_feedforward = self.trans_cell_embed_dim * 4)
-            self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
-            self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
-            self.post_re_linear_2 = nn.Linear(32, 978)
             self.expand_to_num_gene = nn.Linear(50, 978)
             self.linear_dim += cell_id_emb_dim
         if self.use_pert_idose:
@@ -126,26 +123,27 @@ class DeepCESub(nn.Module):
         # out = [batch * num_gene * hid_dim]
         return out
 
-    def gradual_unfreezing(self, steps_pattern=[True, True, True]):
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True]):
         ### steps_pattern is a list a Three boolean value to indicate whether each layer should be frozen
-        assert len(steps_pattern) == 3, "number of boolean values doesn't match with the number of layers"
-        if steps_pattern[0]:
+        assert len(unfreeze_pattern) == 3, "number of boolean values doesn't match with the number of layers"
+        if unfreeze_pattern[0]:
             print("All layers are unfrozen")
             for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
-        elif steps_pattern[1]:
+        elif unfreeze_pattern[1]:
             print("The first layer is still frozen")
             for name, parameter in self.named_parameters():
                 if 'fp' not in name and 'embed' not in name:
-                    print(name)
                     parameter.requires_grad = True
+                else:
+                    print(name)
 
-        elif steps_pattern[2]:
+        elif unfreeze_pattern[2]:
             print("The first two layer is still frozen")
             for name, parameter in self.linear_1.named_parameters():
                 parameter.requires_grad = True
         else:
-            print("all layers are frozen")
+            print("The first three layers are frozen")
             for name, parameter in self.named_parameters():
                 parameter.requires_grad = False
 
@@ -239,12 +237,15 @@ class DeepCEOriginal(DeepCE):
         #for param in self.sub_deepce.parameters():
         #    param.requires_grad = False
     
-    def gradual_unfreezing(self, steps_pattern=[True, True, True, True]):
-        assert len(steps_pattern) == 4, "length of steps_pattern doesn't match model layers number"
-        self.sub_deepce.gradual_unfreezing(steps_pattern[:3])
-        if sum(steps_pattern[:3]): ### either one of the first three boolean values in steps_pattern is True
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
+        assert len(unfreeze_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
+        if sum(steps_pattern[:3]) or steps_pattern[3]: ### either one of the first three boolean values in steps_pattern is True
             for name, parameter in self.linear_2.named_parameters():
                 parameter.requires_grad = True
+        else:
+            for name, parameter in self.linear_2.named_parameters():
+                parameter.requires_grad = False
 
 class DeepCEPretraining(DeepCE):
 
@@ -289,8 +290,8 @@ class DeepCEPretraining(DeepCE):
         # out = [batch * 2] (pic50 and auc)
         return out
 
-    def gradual_unfreezing(self, steps_pattern=[True, True, True, True]):
-        assert len(steps_pattern) == 4, "length of steps_pattern doesn't match model layers number"
-        self.sub_deepce.gradual_unfreezing(steps_pattern[:3])
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
+        assert len(unfreeze_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
