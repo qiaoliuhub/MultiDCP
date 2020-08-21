@@ -45,6 +45,7 @@ gene_expression_file_test = args.test_file
 batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
 unfreeze_steps = args.unfreeze_steps.split(',')
+assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 
 # parameters initialization
@@ -109,6 +110,12 @@ precisionk_list_dev = []
 precisionk_list_test = []
 pearson_raw_list = []
 for epoch in range(max_epoch):
+
+    if str(epoch) is in unfreeze_steps:
+        number_layer_to_unfreeze = 3 - unfreeze_steps[::-1].index(str(epoch)) ## find the position of last occurance of number epoch
+        unfreeze_pattern[3-number_layer_to_unfreeze:] = True
+        model.gradual_unfreezing(unfreeze_pattern)
+
     print("Iteration %d:" % (epoch+1))
     model.train()
     epoch_loss = 0
