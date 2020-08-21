@@ -241,10 +241,10 @@ class DeepCEOriginal(DeepCE):
     
     def gradual_unfreezing(self, steps_pattern=[True, True, True, True]):
         assert len(steps_pattern) == 4, "length of steps_pattern doesn't match model layers number"
-        super().gradual_unfreezing(steps_pattern[:3])
+        self.sub_deepce.gradual_unfreezing(steps_pattern[:3])
         if sum(steps_pattern[:3]): ### either one of the first three boolean values in steps_pattern is True
             for name, parameter in self.linear_2.named_parameters():
-                parameter.
+                parameter.requires_grad = True
 
 class DeepCEPretraining(DeepCE):
 
@@ -288,3 +288,9 @@ class DeepCEPretraining(DeepCE):
         out = torch.cat((out_1, out_2), dim=1)
         # out = [batch * 2] (pic50 and auc)
         return out
+
+    def gradual_unfreezing(self, steps_pattern=[True, True, True, True]):
+        assert len(steps_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(steps_pattern[:3])
+        for name, parameter in self.named_parameters():
+                parameter.requires_grad = True
