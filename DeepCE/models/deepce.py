@@ -132,22 +132,22 @@ class DeepCESub(nn.Module):
         if steps_pattern[0]:
             print("All layers are unfrozen")
             for name, parameter in self.named_parameters():
-                param.requires_grad = True
+                parameter.requires_grad = True
         elif steps_pattern[1]:
             print("The first layer is still frozen")
             for name, parameter in self.named_parameters():
                 if 'fp' not in name and 'embed' not in name:
                     print(name)
-                    param.requires_grad = True
+                    parameter.requires_grad = True
 
         elif steps_pattern[2]:
             print("The first two layer is still frozen")
             for name, parameter in self.linear_1.named_parameters():
-                param.requires_grad = True
+                parameter.requires_grad = True
         else:
             print("all layers are frozen")
             for name, parameter in self.named_parameters():
-                param.requires_grad = False
+                parameter.requires_grad = False
 
 class DeepCE(nn.Module):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
@@ -238,6 +238,13 @@ class DeepCEOriginal(DeepCE):
         #print('frozen the parameters')
         #for param in self.sub_deepce.parameters():
         #    param.requires_grad = False
+    
+    def gradual_unfreezing(self, steps_pattern=[True, True, True, True]):
+        assert len(steps_pattern) == 4, "length of steps_pattern doesn't match model layers number"
+        super().gradual_unfreezing(steps_pattern[:3])
+        if sum(steps_pattern[:3]): ### either one of the first three boolean values in steps_pattern is True
+            for name, parameter in self.linear_2.named_parameters():
+                parameter.
 
 class DeepCEPretraining(DeepCE):
 

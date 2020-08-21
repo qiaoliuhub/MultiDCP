@@ -32,6 +32,7 @@ parser.add_argument('--dev_file')
 parser.add_argument('--test_file')
 parser.add_argument('--batch_size')
 parser.add_argument('--max_epoch')
+parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 
 args = parser.parse_args()
 
@@ -43,6 +44,8 @@ gene_expression_file_dev = args.dev_file
 gene_expression_file_test = args.test_file
 batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
+unfreeze_steps = args.unfreeze_steps.split(',')
+unfreeze_pattern = [False, False, False, False]
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}
