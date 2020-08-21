@@ -15,7 +15,7 @@ import wandb
 import pdb
 from allrank.models.losses import approxNDCGLoss
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
@@ -45,6 +45,7 @@ gene_expression_file_test = args.test_file
 batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
 unfreeze_steps = args.unfreeze_steps.split(',')
+print(unfreeze_steps)
 assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 
