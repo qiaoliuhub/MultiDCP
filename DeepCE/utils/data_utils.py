@@ -144,7 +144,7 @@ def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feat
         dev_cell_id_feature = []
         test_cell_id_feature = []
         use_cell_id = True
-    if len(pert_idose_set) > 1:
+    if len(pert_idose_set) > 6:
         pert_idose_dict = dict(zip(pert_idose_set, list(range(len(pert_idose_set)))))
         train_pert_idose_feature = []
         dev_pert_idose_feature = []
