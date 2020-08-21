@@ -102,19 +102,14 @@ class DeepCESub(nn.Module):
             cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
             ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
-            #### cell_id_embed = input_cell_id
             cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
             # cell_id_embed = [batch * cell_id_emb_dim * 1]
             ## cell_id_embed = cell_id_embed.unsqueeze(1)
             ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
             cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
-            #### cell_id_embed = self.cell_id_reformer(cell_id_embed).transpose(-1,-2)
             cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
             cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
-            #### cell_id_embed = self.post_re_linear_1(cell_id_embed).transpose(-1,-2)
-            #### cell_id_embed = self.post_re_linear_2(cell_id_embed).transpose(-1,-2)
-            #### cell_id_embed = self.cell_id_embed(cell_id_embed)
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)
@@ -130,6 +125,29 @@ class DeepCESub(nn.Module):
         out = self.linear_1(drug_gene_embed)
         # out = [batch * num_gene * hid_dim]
         return out
+
+    def gradual_unfreezing(self, steps_pattern=[True, True, True]):
+        ### steps_pattern is a list a Three boolean value to indicate whether each layer should be frozen
+        assert len(steps_pattern) == 3, "number of boolean values doesn't match with the number of layers"
+        if steps_pattern[0]:
+            print("All layers are unfrozen")
+            for name, parameter in self.named_parameters():
+                param.requires_grad = True
+        elif steps_pattern[1]:
+            print("The first layer is still frozen")
+            for name, parameter in self.named_parameters():
+                if 'fp' not in name and 'embed' not in name:
+                    print(name)
+                    param.requires_grad = True
+
+        elif steps_pattern[2]:
+            print("The first two layer is still frozen")
+            for name, parameter in self.linear_1.named_parameters():
+                param.requires_grad = True
+        else:
+            print("all layers are frozen")
+            for name, parameter in self.named_parameters():
+                param.requires_grad = False
 
 class DeepCE(nn.Module):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
@@ -216,6 +234,9 @@ class DeepCEOriginal(DeepCE):
         super().init_weights()
         print('load old model')
         self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
+    
+    def gradual_unfreezing(model, step):
+
 
 class DeepCEPretraining(DeepCE):
 
@@ -259,4 +280,4 @@ class DeepCEPretraining(DeepCE):
         out = torch.cat((out_1, out_2), dim=1)
         # out = [batch * 2] (pic50 and auc)
         return out
-        
+
