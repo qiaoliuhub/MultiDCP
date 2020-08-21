@@ -117,7 +117,8 @@ for epoch in range(max_epoch):
         for i in range(3-number_layer_to_unfreeze,4):
             unfreeze_pattern[i] = True 
         model.gradual_unfreezing(unfreeze_pattern)
-
+    
+    print(unfreeze_pattern)
     print("Iteration %d:" % (epoch+1))
     model.train()
     epoch_loss = 0
