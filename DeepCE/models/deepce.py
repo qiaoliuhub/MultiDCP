@@ -40,6 +40,9 @@ class DeepCESub(nn.Module):
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
             self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8, dim_feedforward = self.trans_cell_embed_dim * 4)
+            self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
+            self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
+            self.post_re_linear_2 = nn.Linear(32, 978)
             self.expand_to_num_gene = nn.Linear(50, 978)
             self.linear_dim += cell_id_emb_dim
         if self.use_pert_idose:
