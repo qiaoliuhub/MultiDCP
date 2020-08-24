@@ -14,6 +14,7 @@ import metric
 import wandb
 import pdb
 from allrank.models.losses import approxNDCGLoss
+from scheduler_lr import step_lr
 
 USE_wandb = True
 if USE_wandb:
@@ -98,6 +99,7 @@ if USE_wandb:
 
 # training
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
+scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=[lambda step: step_lr(unfreeze_pattern, step)])
 best_dev_loss = float("inf")
 best_dev_pearson = float("-inf")
 pearson_list_dev = []
@@ -110,7 +112,10 @@ precisionk_list_dev = []
 precisionk_list_test = []
 pearson_raw_list = []
 for epoch in range(max_epoch):
-
+    
+    scheduler.step()
+    for param_group in optimizer.param_groups:
+        print("============current learning rate is {0!r}".format(param_group[‘lr’]))
     if str(epoch) in unfreeze_steps:
         number_layer_to_unfreeze = 3 - unfreeze_steps[::-1].index(str(epoch)) ## find the position of last occurance of number epoch
         for i in range(3-number_layer_to_unfreeze,4):
