@@ -91,7 +91,7 @@ def read_data(input_file, filter):
         f.readline()  # skip header
         for line in f:
             line = line.strip().split(',')
-            assert len(line) == 983 or len(line) == 7, "Wrong format"
+            assert len(line) == 983 or len(line) == 7 or len(line) == 6, "Wrong format"
             if filter["time"] in line[0] and line[1] not in filter['pert_id'] and line[2] in filter["pert_type"] \
                     and line[3] in filter['cell_id'] and line[4] in filter["pert_idose"]:
                 ft = ','.join(line[1:5])
@@ -144,7 +144,7 @@ def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feat
         dev_cell_id_feature = []
         test_cell_id_feature = []
         use_cell_id = True
-    if len(pert_idose_set) > 6:
+    if len(pert_idose_set) > 1:
         pert_idose_dict = dict(zip(pert_idose_set, list(range(len(pert_idose_set)))))
         train_pert_idose_feature = []
         dev_pert_idose_feature = []
