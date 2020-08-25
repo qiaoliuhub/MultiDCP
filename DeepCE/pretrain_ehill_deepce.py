@@ -162,8 +162,8 @@ for epoch in range(max_epoch):
             predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
-            lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+            lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
+            predict_np = np.concatenate((predict_np, predict.cpu().numpy().reshape(-1)), axis=0)
 
         print('Dev ehill loss:')
         print(epoch_loss_ehill / (i + 1))
@@ -186,7 +186,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_mode_storage_')
+            save(model.sub_deepce.state_dict(), 'best_mode_ehill_storage_')
             print('==========================Best mode saved =====================')
 
     epoch_loss_ehill = 0
@@ -212,8 +212,8 @@ for epoch in range(max_epoch):
             predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
-            lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+            lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
+            predict_np = np.concatenate((predict_np, predict.cpu().numpy().reshape(-1)), axis=0)
 
         print('Test ehill loss:')
         print(epoch_loss_ehill / (i + 1))
