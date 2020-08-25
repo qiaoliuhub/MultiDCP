@@ -298,3 +298,42 @@ class DeepCEPretraining(DeepCE):
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
+
+class DeepCEEhillPretraining(DeepCE):
+
+    def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
+                 cell_id_input_dim=None, pert_idose_input_dim=None,
+                 pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
+                 use_cell_id=False, use_pert_idose=False):
+        super(DeepCEEhillPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
+                 hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
+                 cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
+                 pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
+                 use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.relu = nn.ReLU()
+        self.task_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), 
+                                            nn.ReLU(), 
+                                            nn.Linear(hid_dim//2, hid_dim//2),
+                                            nn.ReLU(),
+                                            nn.Linear(hid_dim//2, 1)
+                                            )
+        super().init_weights()
+
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        # out = [batch * num_gene * hid_dim]
+        out = self.relu(out)
+        # out = [batch * num_gene * hid_dim]
+        out = torch.sum(out, dim=1).squeeze(1)
+        # out = [batch * 1 * hid_dim] => [batch * hid_dim] 
+        out = self.task_linear(out)
+        # out = [batch * 1] (ehill)
+        return out
+
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
+        assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
+        for name, parameter in self.named_parameters():
+                parameter.requires_grad = True
+>>>>>>> 41cd1442b8b7f971cca418bc13ec6094275bd92c
