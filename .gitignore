@@ -14,3 +14,4 @@ __pycache__/*
 *.pt
 *.pdf
 DeepCE/output/*
+DeepCE/data/*_ehill.csv

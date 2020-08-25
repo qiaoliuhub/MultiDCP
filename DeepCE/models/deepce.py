@@ -233,7 +233,7 @@ class DeepCEOriginal(DeepCE):
     def init_weights(self):
         print('Initialized deepce original\'s weight............')
         super().init_weights()
-        #print('used original models, no pretraining')
+        # print('used original models, no pretraining')
         print('load old model')
         self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
         #print('frozen the parameters')
