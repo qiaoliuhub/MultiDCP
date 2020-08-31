@@ -2,12 +2,50 @@ import numpy as np
 import random
 import torch
 import data_utils
+import pandas as pd
 
 seed = 343
 np.random.seed(seed=seed)
 random.seed(a=seed)
 torch.manual_seed(seed)
 
+class AEDataReader(object):
+
+    #### prepare L1000 gene expression profile as input
+    #### prepare essential gene expression profile or L1000 gene expression profile as output
+    def __init__(self, input_file_name, label_file_name, device):
+        self.input_file_name = input_file_name
+        self.label_file_name = label_file_name
+        self.train_feature = pd.read_csv(self.input_file_name + '_train.csv').to(device)
+        self.dev_feature = pd.read_csv(self.input_file_name + '_dev.csv').to(device)
+        self.test_feature = pd.read_csv(self.input_file_name + '_test.csv').to(device)
+        self.train_label = pd.read_csv(self.label_file_name + '_train.csv').to(device)
+        self.dev_label = pd.read_csv(self.label_file_name + '_dev.csv').to(device)
+        self.test_label = pd.read_csv(self.label_file_name + '_test.csv').to(device)
+
+    #### get batch data: 
+    #### input: dataset: indicate whether this is train, dev or test
+    ####        batch_size: indicate batch size
+    ####        shuffle: inidicate whether i need to shuffle the data
+    def get_batch_data(self, dataset, batch_size, shuffle):
+        if dataset == 'train':
+            feature = self.train_feature
+            label = self.train_label
+        elif dataset == 'dev':
+            feature = self.dev_feature
+            label = self.dev_label
+        elif dataset == 'test':
+            feature = self.test_feature
+            label = self.test_label
+        if shuffle:
+            index = torch.randperm(len(feature)).long()
+            index = index.numpy()
+        for start_idx in range(0, len(feature), batch_size):
+            if shuffle:
+                excerpt = index[start_idx: start_idx + batch_size]
+            else:
+                excerpt = slice(start_idx, start_idx + batch_size)
+            yield feature[excerpt], label[excerpt]
 
 class DataReader(object):
     def __init__(self, drug_file, gene_file, data_file_train, data_file_dev, data_file_test,
