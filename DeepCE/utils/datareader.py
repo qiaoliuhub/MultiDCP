@@ -16,12 +16,12 @@ class AEDataReader(object):
     def __init__(self, input_file_name, label_file_name, device):
         self.input_file_name = input_file_name
         self.label_file_name = label_file_name
-        self.train_feature = torch.from_numpy(pd.read_csv(self.input_file_name + '_train.csv').values).to(device)
-        self.dev_feature = torch.from_numpy(pd.read_csv(self.input_file_name + '_dev.csv').values).to(device)
-        self.test_feature = torch.from_numpy(pd.read_csv(self.input_file_name + '_test.csv').values).to(device)
-        self.train_label = torch.from_numpy(pd.read_csv(self.label_file_name + '_train.csv').values).to(device)
-        self.dev_label = torch.from_numpy(pd.read_csv(self.label_file_name + '_dev.csv').values).to(device)
-        self.test_label = torch.from_numpy(pd.read_csv(self.label_file_name + '_test.csv').values).to(device)
+        self.train_feature = torch.from_numpy(np.asarray(pd.read_csv(self.input_file_name + '_train.csv').values, dtype=np.float64)).to(device)
+        self.dev_feature = torch.from_numpy(np.asarray(pd.read_csv(self.input_file_name + '_dev.csv').values, dtype=np.float64)).to(device)
+        self.test_feature = torch.from_numpy(np.asarray(pd.read_csv(self.input_file_name + '_test.csv').values, dtype=np.float64)).to(device)
+        self.train_label = torch.from_numpy(np.asarray(pd.read_csv(self.label_file_name + '_train.csv').values, dtype=np.float64)).to(device)
+        self.dev_label = torch.from_numpy(np.asarray(pd.read_csv(self.label_file_name + '_dev.csv').values, dtype=np.float64)).to(device)
+        self.test_label = torch.from_numpy(np.asarray(pd.read_csv(self.label_file_name + '_test.csv').values, dtype=np.float64)).to(device)
 
     #### get batch data: 
     #### input: dataset: indicate whether this is train, dev or test
