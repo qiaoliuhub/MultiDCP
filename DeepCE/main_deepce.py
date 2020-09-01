@@ -16,7 +16,7 @@ import pdb
 from allrank.models.losses import approxNDCGLoss
 from scheduler_lr import step_lr
 
-USE_wandb = True
+USE_wandb = False
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
@@ -144,6 +144,7 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
+        pdb.set_trace()
         predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)

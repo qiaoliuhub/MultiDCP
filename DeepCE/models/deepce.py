@@ -233,9 +233,9 @@ class DeepCEOriginal(DeepCE):
     def init_weights(self):
         print('Initialized deepce original\'s weight............')
         super().init_weights()
-        # print('used original models, no pretraining')
-        print('load old model')
-        self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
+        print('used original models, no pretraining')
+        #print('load old model')
+        #self.sub_deepce.load_state_dict(torch.load('best_mode_ehill_storage_'))
         #print('frozen the parameters')
         #for param in self.sub_deepce.parameters():
         #    param.requires_grad = False
@@ -336,4 +336,3 @@ class DeepCEEhillPretraining(DeepCE):
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
->>>>>>> 41cd1442b8b7f971cca418bc13ec6094275bd92c
