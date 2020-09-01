@@ -63,7 +63,7 @@ degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
 cell_id_emb_dim = 32
-cell_decoder_dim = 978 # autoencoder label's dimension
+cell_decoder_dim = 2145 # autoencoder label's dimension
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
@@ -144,7 +144,7 @@ for epoch in range(max_epoch):
     
     epoch_loss = 0
 
-    for feature, label in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+    for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature

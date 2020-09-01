@@ -367,7 +367,8 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene]
             return out
         else:
-            hidden = self.cell_id_embed(input_cell_id)
+            pdb.set_trace()
+            hidden = self.sub_deepce.cell_id_embed(input_cell_id)
             # hidden = [batch * 50]
             out_2 = self.decoder(hidden)
             # out_2 = [batch * cell_decoder_dim]
@@ -377,8 +378,20 @@ class DeepCE_AE(DeepCE):
         print('Initialized deepce original\'s weight............')
         super().init_weights()
         print('used original models, no pretraining')
+        for name, parameter in self.named_parameters():
+            if 'attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
         #print('load old model')
         #self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
         #print('frozen the parameters')
         #for param in self.sub_deepce.parameters():
         #    param.requires_grad = False
+
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
+        assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
+        for name, parameter in self.named_parameters():
+                parameter.requires_grad = True
