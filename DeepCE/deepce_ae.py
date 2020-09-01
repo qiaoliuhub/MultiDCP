@@ -166,7 +166,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for feature, label in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
             loss = model.loss(label, predict)
@@ -287,7 +287,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for feature, label in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
             loss = model.loss(label, predict)
