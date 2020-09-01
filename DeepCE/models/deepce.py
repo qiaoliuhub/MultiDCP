@@ -352,7 +352,7 @@ class DeepCE_AE(DeepCE):
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
         self.linear_2 = nn.Linear(hid_dim, 1)
-        self.decoder = nn.Sequential((nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim)))
+        self.decoder = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed'):
@@ -377,8 +377,20 @@ class DeepCE_AE(DeepCE):
         print('Initialized deepce original\'s weight............')
         super().init_weights()
         print('used original models, no pretraining')
+        for name, parameter in self.named_parameters():
+            if 'attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
         #print('load old model')
         #self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
         #print('frozen the parameters')
         #for param in self.sub_deepce.parameters():
         #    param.requires_grad = False
+
+    def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
+        assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
+        self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
+        for name, parameter in self.named_parameters():
+                parameter.requires_grad = True
