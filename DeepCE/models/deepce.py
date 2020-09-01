@@ -352,7 +352,7 @@ class DeepCE_AE(DeepCE):
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
         self.linear_2 = nn.Linear(hid_dim, 1)
-        self.decoder = nn.Sequential((nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim)))
+        self.decoder = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed'):
