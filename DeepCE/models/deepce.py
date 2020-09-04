@@ -68,7 +68,7 @@ class DeepCESub(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         num_batch = input_drug['molecules'].batch_size
@@ -108,6 +108,8 @@ class DeepCESub(nn.Module):
             ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
             cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
             cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
+            if epoch % 100 = 1:
+                print(cell_id_embed)
             cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
@@ -178,11 +180,11 @@ class DeepCE(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         # out = [batch * num_gene * hid_dim]
-        return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
 
     def loss(self, label, predict):
         if self.loss_type == 'point_wise_mse':
@@ -219,8 +221,8 @@ class DeepCEOriginal(DeepCE):
         self.linear_2 = nn.Linear(hid_dim, 1)
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
@@ -355,9 +357,9 @@ class DeepCE_AE(DeepCE):
         self.decoder = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed'):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0):
         if job_id == 'perturbed':
-            out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+            out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
             # out = [batch * num_gene * hid_dim]
@@ -367,9 +369,21 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene]
             return out
         else:
-            hidden = self.cell_id_embed(input_cell_id)
+            hidden = super().cell_id_embed(input_cell_id)
             # hidden = [batch * 50]
+            if epoch % 100 == 1:
+                print(hidden)
+                new_hidden = hidden.clone()
+                new_input_cell_id = input_cell_id.clone()
+                torch.save(new_hidden, 'new_hidden.pt')
+                torch.save(new_input_cell_id, 'new_input_cell_id.pt')
             out_2 = self.decoder(hidden)
+            
+            if epoch % 100 == 1:
+                print(input_cell_id)
+                print(out_2)
+                new_out_2 = out_2.clone()
+                torch.save(new_out_2, 'new_out_2.pt')
             # out_2 = [batch * cell_decoder_dim]
             return out_2
     
