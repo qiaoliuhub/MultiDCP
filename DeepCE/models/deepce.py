@@ -108,7 +108,7 @@ class DeepCESub(nn.Module):
             ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
             cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
             cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
-            if epoch % 100 = 1:
+            if epoch % 100 == 1:
                 print(cell_id_embed)
             cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
             # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
@@ -369,7 +369,7 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene]
             return out
         else:
-            hidden = super().cell_id_embed(input_cell_id)
+            hidden = self.sub_deepce.cell_id_embed(input_cell_id)
             # hidden = [batch * 50]
             if epoch % 100 == 1:
                 print(hidden)
