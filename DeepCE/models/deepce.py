@@ -39,7 +39,9 @@ class DeepCESub(nn.Module):
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
-            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8, dim_feedforward = self.trans_cell_embed_dim * 4)
+            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8,
+                                                    num_encoder_layers = 1, num_decoder_layers = 1,
+                                                    dim_feedforward = self.trans_cell_embed_dim * 4)
             self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
             self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
             self.post_re_linear_2 = nn.Linear(32, 978)
@@ -62,11 +64,12 @@ class DeepCESub(nn.Module):
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
-            if 'drug_gene_attn' not in name:
-                if parameter.dim() == 1:
-                    nn.init.constant_(parameter, 0.)
-                else:
-                    self.initializer(parameter)
+            self.initializer(parameter)
+            # if 'drug_gene_attn' not in name:
+            #     if parameter.dim() == 1:
+            #         nn.init.constant_(parameter, 0.)
+            #     else:
+            #         self.initializer(parameter)
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
@@ -178,11 +181,12 @@ class DeepCE(nn.Module):
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
-            if 'drug_gene_attn' not in name:
-                if parameter.dim() == 1:
-                    nn.init.constant_(parameter, 0.)
-                else:
-                    self.initializer(parameter)
+            self.initializer(parameter)
+            # if 'drug_gene_attn' not in name:
+            #     if parameter.dim() == 1:
+            #         nn.init.constant_(parameter, 0.)
+            #     else:
+            #         self.initializer(parameter)
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
@@ -396,11 +400,12 @@ class DeepCE_AE(DeepCE):
         super().init_weights()
         print('used original models, no pretraining')
         for name, parameter in self.named_parameters():
-            if 'attn' not in name:
-                if parameter.dim() == 1:
-                    nn.init.constant_(parameter, 0.)
-                else:
-                    self.initializer(parameter)
+            self.initializer(parameter)
+            # if 'attn' not in name:
+            #     if parameter.dim() == 1:
+            #         nn.init.constant_(parameter, 0.)
+            #     else:
+            #         self.initializer(parameter)
         #print('load old model')
         #self.sub_deepce.load_state_dict(torch.load('best_mode_storage_'))
         #print('frozen the parameters')
