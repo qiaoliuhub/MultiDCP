@@ -367,7 +367,6 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene]
             return out
         else:
-            pdb.set_trace()
             hidden = self.sub_deepce.cell_id_embed(input_cell_id)
             # hidden = [batch * 50]
             out_2 = self.decoder(hidden)

@@ -2,7 +2,7 @@
 
 def step_lr(step_pattern, step):
     if step >= step_pattern[3]:
-        return 0.1
+        return 1
     elif step >= step_pattern[2]:
         return 1
     elif step >= step_pattern[1]:

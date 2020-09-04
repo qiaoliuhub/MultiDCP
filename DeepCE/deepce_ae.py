@@ -17,7 +17,7 @@ import pdb
 import pickle
 from scheduler_lr import step_lr
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
     wandb.init(project="DeepCE")
 else:
@@ -63,7 +63,7 @@ degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
 cell_id_emb_dim = 32
-cell_decoder_dim = 2145 # autoencoder label's dimension
+cell_decoder_dim = 978 #2145 # autoencoder label's dimension
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
