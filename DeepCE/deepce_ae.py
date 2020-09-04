@@ -19,7 +19,7 @@ from scheduler_lr import step_lr
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE")
+    wandb.init(project="DeepCE_AE")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -149,7 +149,7 @@ for epoch in range(max_epoch):
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature
         predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
         loss.backward()
@@ -168,7 +168,7 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
@@ -194,8 +194,8 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
             print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
-            wandb.log({'AE Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
-            wandb.log({'AE Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
+            # wandb.log({'AE Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
+            # wandb.log({'AE Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
             ae_precision.append([precision_pos, precision_neg])
         precisionk_list_ae_dev.append(ae_precision)
 
@@ -218,7 +218,7 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+        predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
@@ -250,7 +250,7 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+            predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
@@ -275,8 +275,8 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
-            wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
+            # wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
+            # wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
             perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
@@ -314,8 +314,8 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
             print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
-            wandb.log({'AE Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
-            wandb.log({'AE Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
+            # wandb.log({'AE Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
+            # wandb.log({'AE Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
             ae_precision_test.append([precision_pos, precision_neg])
         precisionk_list_perturbed_test.append(ae_precision_test)
 
@@ -365,8 +365,8 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
-            wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
+            # wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
+            # wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
             perturbed_precision_test.append([precision_pos, precision_neg])
         precisionk_list_perturbed_test.append(perturbed_precision_test)
 
