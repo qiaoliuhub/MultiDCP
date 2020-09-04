@@ -39,7 +39,7 @@ class DeepCESub(nn.Module):
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
-            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8, dim_feedforward = self.trans_cell_embed_dim * 4)
+            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8,num_encoder_layers = 1, num_decoder_layers = 1, dim_feedforward = self.trans_cell_embed_dim * 4)
             self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
             self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
             self.post_re_linear_2 = nn.Linear(32, 978)
@@ -99,6 +99,8 @@ class DeepCESub(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
+            if epoch == 20:
+                pdb.set_trace()
             cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
             ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
             # cell_id_embed = [batch * cell_id_emb_dim]
