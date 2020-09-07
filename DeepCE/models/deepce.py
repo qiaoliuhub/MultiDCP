@@ -65,7 +65,7 @@ class DeepCESub(nn.Module):
             return
         for name, parameter in self.named_parameters():
             if parameter.dim() == 1:
-                nn.init.constant_(parameter, 0.001)
+                nn.init.constant_(parameter, 10**-7)
             else:
                 self.initializer(parameter)
             # if 'drug_gene_attn' not in name:
@@ -187,7 +187,7 @@ class DeepCE(nn.Module):
             return
         for name, parameter in self.named_parameters():
             if parameter.dim() == 1:
-                nn.init.constant_(parameter, 0.001)
+                nn.init.constant_(parameter, 10**-7)
             else:
                 self.initializer(parameter)
             # if 'drug_gene_attn' not in name:
@@ -409,7 +409,7 @@ class DeepCE_AE(DeepCE):
         print('used original models, no pretraining')
         for name, parameter in self.named_parameters():
             if parameter.dim() == 1:
-                nn.init.constant_(parameter, 0.001)
+                nn.init.constant_(parameter, 10**-7)
             else:
                 self.initializer(parameter)
             # if 'attn' not in name:
