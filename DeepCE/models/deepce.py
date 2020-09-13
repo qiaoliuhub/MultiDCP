@@ -40,11 +40,11 @@ class DeepCESub(nn.Module):
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
             self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8,
-                                                    num_encoder_layers = 1, num_decoder_layers = 1,
+                                                    num_encoder_layers = 6, num_decoder_layers = 6,
                                                     dim_feedforward = self.trans_cell_embed_dim * 4)
-            self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
-            self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
-            self.post_re_linear_2 = nn.Linear(32, 978)
+            # self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 0.1, causal = True)
+            # self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
+            # self.post_re_linear_2 = nn.Linear(32, 978)
             self.expand_to_num_gene = nn.Linear(50, 978)
             self.linear_dim += cell_id_emb_dim
         if self.use_pert_idose:
@@ -70,7 +70,7 @@ class DeepCESub(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         num_batch = input_drug['molecules'].batch_size
@@ -101,23 +101,28 @@ class DeepCESub(nn.Module):
             # pert_type_embed = [batch * num_gene * pert_type_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, pert_type_embed), dim=2)
         if self.use_cell_id:
-            cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
-            ## cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
-            # cell_id_embed = [batch * cell_id_emb_dim]
-            cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
-            # cell_id_embed = [batch * cell_id_emb_dim * 1]
-            ## cell_id_embed = cell_id_embed.unsqueeze(1)
-            ## cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
-            cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
-            if epoch % 100 == 1:
-                print(cell_id_embed)
-                torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
-            cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
-            if epoch % 100 == 1:
-                print(cell_id_embed)
-                torch.save(cell_id_embed, 'cell_id_embed_post.pt')
-            cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
-            # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
+            if linear_only:
+                cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
+                # cell_id_embed = [batch * cell_id_emb_dim]
+                cell_id_embed = cell_id_embed.unsqueeze(1)
+                # cell_id_embed = [batch * 1 * cell_id_emb_dim]
+                cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
+                # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
+            else:
+                cell_id_embed = self.cell_id_embed(input_cell_id) # Transformer
+                cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
+                # cell_id_embed = [batch * cell_id_emb_dim * 1]
+                
+                cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
+                if epoch % 100 == 1:
+                    print(cell_id_embed)
+                    torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
+                cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
+                if epoch % 100 == 1:
+                    print(cell_id_embed)
+                    torch.save(cell_id_embed, 'cell_id_embed_post.pt')
+                cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
+                # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)
