@@ -64,15 +64,16 @@ class DeepCESub(nn.Module):
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
-            if parameter.dim() == 1:
-                nn.init.constant_(parameter, 10**-7)
-            else:
-                self.initializer(parameter)
             # if 'drug_gene_attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 0.)
             #     else:
             #         self.initializer(parameter)
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
@@ -186,10 +187,11 @@ class DeepCE(nn.Module):
         if self.initializer is None:
             return
         for name, parameter in self.named_parameters():
-            if parameter.dim() == 1:
-                nn.init.constant_(parameter, 10**-7)
-            else:
-                self.initializer(parameter)
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
             # if 'drug_gene_attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 0.)
@@ -408,10 +410,11 @@ class DeepCE_AE(DeepCE):
         super().init_weights()
         print('used original models, no pretraining')
         for name, parameter in self.named_parameters():
-            if parameter.dim() == 1:
-                nn.init.constant_(parameter, 10**-7)
-            else:
-                self.initializer(parameter)
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 0.)
+                else:
+                    self.initializer(parameter)
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 0.)

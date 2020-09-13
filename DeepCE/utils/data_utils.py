@@ -91,7 +91,7 @@ def read_data(input_file, filter):
         f.readline()  # skip header
         for line in f:
             line = line.strip().split(',')
-            assert len(line) == 983 or len(line) == 7 or len(line) == 6, "Wrong format"
+            # assert len(line) == 983 or len(line) == 7 or len(line) == 6, "Wrong format"
             if filter["time"] in line[0] and line[1] not in filter['pert_id'] and line[2] in filter["pert_type"] \
                     and line[3] in filter['cell_id'] and line[4] in filter["pert_idose"]:
                 ft = ','.join(line[1:5])
@@ -114,7 +114,7 @@ def read_data(input_file, filter):
 
 def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feature_test, label_test, drug,
                         device):
-    file_name = 'ccle_gene_expression_file.csv'
+    file_name = 'gene_expression_combat_978.csv'
     # file_name = 'ccle_gene_expression_2176.csv'
     cell_line_expression_feature_csv = pd.read_csv('/workspace/DeepCE/DeepCE/data/' + file_name, index_col = 0)
     train_drug_feature = []
