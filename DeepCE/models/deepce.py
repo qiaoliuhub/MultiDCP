@@ -21,7 +21,7 @@ class GaussianNoise(nn.Module):
             network to generate vectors with smaller values.
     """
 
-    def __init__(self, sigma=0.1, is_relative_detach=True):
+    def __init__(self, sigma=0.1, is_relative_detach=True, device = 'cpu'):
         super().__init__()
         self.sigma = sigma
         self.is_relative_detach = is_relative_detach
@@ -403,7 +403,7 @@ class DeepCE_AE(DeepCE):
                  cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
-        self.guassian_noise = GaussianNoise()
+        self.guassian_noise = GaussianNoise(device=device)
         self.relu = nn.ReLU()
         self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
         self.linear_2 = nn.Linear(hid_dim, 1)
