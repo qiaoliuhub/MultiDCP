@@ -19,7 +19,7 @@ from scheduler_lr import step_lr
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE")
+    wandb.init(project="DeepCE_AE_1")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -203,6 +203,7 @@ for epoch in range(max_epoch):
 
     for i, batch in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         ft, lb = batch
+        pdb.set_trace()
         drug = ft['drug']
         mask = ft['mask']
         if data.use_pert_type:
