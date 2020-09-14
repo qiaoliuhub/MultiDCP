@@ -390,9 +390,9 @@ class DeepCE_AE(DeepCE):
             hidden = self.sub_deepce.cell_id_embed(input_cell_id)
             hidden = hidden.unsqueeze(-1)  # Transformer
             # hidden = [batch * cell_id_emb_dim * 1]
-            hidden = self.cell_id_embed_1(hidden) # Transformer
+            hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
             # hidden = [batch * cell_id_emb_dim * ]
-            hidden = self.cell_id_transformer(hidden, hidden)
+            hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
             # hidden = [batch * cell_id_emb_dim * ]
             if epoch % 100 == 1:
                 print(hidden)
@@ -402,7 +402,7 @@ class DeepCE_AE(DeepCE):
                 torch.save(new_input_cell_id, 'new_input_cell_id.pt')
             
             hidden = self.decoder_1(hidden).squeeze(-1)
-            out_2 = self.decoder(hidden)
+            out_2 = self.decoder_2(hidden)
             
             if epoch % 100 == 1:
                 print(input_cell_id)
