@@ -401,18 +401,19 @@ class DeepCE_AE(DeepCE):
             return out
         else:
             hidden = self.sub_deepce.cell_id_embed(input_cell_id)
-            hidden = hidden.unsqueeze(-1)  # Transformer
-            # hidden = [batch * cell_id_emb_dim * 1]
-            hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
-            # hidden = [batch * cell_id_emb_dim * ]
-            hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
-            # hidden = [batch * cell_id_emb_dim * ]
             if epoch % 100 == 1:
                 print(hidden)
                 new_hidden = hidden.clone()
                 new_input_cell_id = input_cell_id.clone()
                 torch.save(new_hidden, 'new_hidden.pt')
                 torch.save(new_input_cell_id, 'new_input_cell_id.pt')
+                
+            hidden = hidden.unsqueeze(-1)  # Transformer
+            # hidden = [batch * cell_id_emb_dim * 1]
+            hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
+            # hidden = [batch * cell_id_emb_dim * ]
+            hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
+            # hidden = [batch * cell_id_emb_dim * ]
             
             hidden = self.decoder_1(hidden).squeeze(-1)
             out_2 = self.decoder_2(hidden)
