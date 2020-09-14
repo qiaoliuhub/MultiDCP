@@ -377,8 +377,10 @@ class DeepCE_AE(DeepCE):
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
         self.relu = nn.ReLU()
+        self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
         self.linear_2 = nn.Linear(hid_dim, 1)
-        self.decoder = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
+        self.decoder_1 = nn.Linear(self.trans_cell_embed_dim, 1)
+        self.decoder_2 = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0):
@@ -394,13 +396,20 @@ class DeepCE_AE(DeepCE):
             return out
         else:
             hidden = self.sub_deepce.cell_id_embed(input_cell_id)
-            # hidden = [batch * 50]
+            hidden = hidden.unsqueeze(-1)  # Transformer
+            # hidden = [batch * cell_id_emb_dim * 1]
+            hidden = self.cell_id_embed_1(hidden) # Transformer
+            # hidden = [batch * cell_id_emb_dim * ]
+            hidden = self.cell_id_transformer(hidden, hidden)
+            # hidden = [batch * cell_id_emb_dim * ]
             if epoch % 100 == 1:
                 print(hidden)
                 new_hidden = hidden.clone()
                 new_input_cell_id = input_cell_id.clone()
                 torch.save(new_hidden, 'new_hidden.pt')
                 torch.save(new_input_cell_id, 'new_input_cell_id.pt')
+            
+            hidden = self.decoder_1(hidden).squeeze(-1)
             out_2 = self.decoder(hidden)
             
             if epoch % 100 == 1:
