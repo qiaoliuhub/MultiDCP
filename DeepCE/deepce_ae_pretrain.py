@@ -201,6 +201,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
+            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_')
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
