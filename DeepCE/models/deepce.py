@@ -7,6 +7,33 @@ from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_
 import pdb
 from reformer_pytorch import Reformer
 
+class GaussianNoise(nn.Module):
+    """Gaussian noise regularizer.
+
+    Args:
+        sigma (float, optional): relative standard deviation used to generate the
+            noise. Relative means that it will be multiplied by the magnitude of
+            the value your are adding the noise to. This means that sigma can be
+            the same regardless of the scale of the vector.
+        is_relative_detach (bool, optional): whether to detach the variable before
+            computing the scale of the noise. If `False` then the scale of the noise
+            won't be seen as a constant but something to optimize: this will bias the
+            network to generate vectors with smaller values.
+    """
+
+    def __init__(self, sigma=0.1, is_relative_detach=True):
+        super().__init__()
+        self.sigma = sigma
+        self.is_relative_detach = is_relative_detach
+        self.noise = torch.tensor(0).to(device)
+
+    def forward(self, x):
+        if self.training and self.sigma != 0:
+            scale = self.sigma * x.detach() if self.is_relative_detach else self.sigma * x
+            sampled_noise = self.noise.repeat(*x.size()).normal_() * scale
+            x = x + sampled_noise
+        return x 
+
 class DeepCESub(nn.Module):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
@@ -368,6 +395,7 @@ class DeepCE_AE(DeepCE):
                  cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.guassian_noise = GaussianNoise()
         self.relu = nn.ReLU()
         self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
         self.linear_2 = nn.Linear(hid_dim, 1)
@@ -391,14 +419,15 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene]
             return out
         else:
-            hidden = self.sub_deepce.cell_id_embed(input_cell_id)
+            hidden = self.guassian_noise(input_cell_id)
+            hidden = self.sub_deepce.cell_id_embed(hidden)
             if epoch % 100 == 1:
                 print(hidden)
                 new_hidden = hidden.clone()
                 new_input_cell_id = input_cell_id.clone()
                 torch.save(new_hidden, 'new_hidden.pt')
                 torch.save(new_input_cell_id, 'new_input_cell_id.pt')
-                
+
             hidden = hidden.unsqueeze(-1)  # Transformer
             # hidden = [batch * cell_id_emb_dim * 1]
             hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
@@ -417,7 +446,7 @@ class DeepCE_AE(DeepCE):
             # out_2 = [batch * cell_decoder_dim]
             return out_2
     
-    def init_weights(self):
+    def init_weights(self, pretrained = False):
         print('Initialized deepce original\'s weight............')
         super().init_weights()
         print('used original models, no pretraining')
@@ -427,6 +456,8 @@ class DeepCE_AE(DeepCE):
                     nn.init.constant_(parameter, 10**-7)
                 else:
                     self.initializer(parameter)
+        if pretrained:
+            self.sub_deepce.load_state_dict('best_sub_deepce_storage_')
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 0.)
