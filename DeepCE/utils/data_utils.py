@@ -114,7 +114,7 @@ def read_data(input_file, filter):
 
 def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feature_test, label_test, drug,
                         device):
-    file_name = 'gene_expression_combat_978.csv'
+    file_name = 'ccle_gene_expression_file_norm.csv'
     # file_name = 'ccle_gene_expression_2176.csv'
     cell_line_expression_feature_csv = pd.read_csv('/workspace/DeepCE/DeepCE/data/' + file_name, index_col = 0)
     train_drug_feature = []

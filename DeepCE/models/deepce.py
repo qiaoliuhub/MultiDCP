@@ -40,7 +40,7 @@ class DeepCESub(nn.Module):
             self.trans_cell_embed_dim = 32
             self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
             self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8,
-                                                    num_encoder_layers = 1, num_decoder_layers = 1,
+                                                    num_encoder_layers = 6, num_decoder_layers = 6,
                                                     dim_feedforward = self.trans_cell_embed_dim * 4)
             # self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 10**-71, causal = True)
             # self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
@@ -387,6 +387,7 @@ class DeepCE_AE(DeepCE):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
+                pdb.set_trace()
             out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
