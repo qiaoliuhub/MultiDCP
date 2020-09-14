@@ -385,6 +385,8 @@ class DeepCE_AE(DeepCE):
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0):
         if job_id == 'perturbed':
+            if epoch % 100 == 1:
+                torch.save(input_cell_id, 'input_cell_feature.pt')
             out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
@@ -392,6 +394,8 @@ class DeepCE_AE(DeepCE):
             out = self.linear_2(out)
             # out = [batch * num_gene * 1]
             out = out.squeeze(2)
+            if epoch % 100 == 1:
+                torch.save(out, 'predicted_cell_feature.pt')
             # out = [batch * num_gene]
             return out
         else:
