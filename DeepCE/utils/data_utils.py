@@ -109,7 +109,7 @@ def read_data(input_file, filter):
         else:
             lb = choose_mean_example(lb)
             label.append(lb)
-    _, cell_type = np.unique(np.asarray(feature[2]), return_inverse=True)
+    _, cell_type = np.unique(np.asarray([x[2] for x in feature), return_inverse=True)
     return np.asarray(feature), np.asarray(label, dtype=np.float64), cell_type
 
 
