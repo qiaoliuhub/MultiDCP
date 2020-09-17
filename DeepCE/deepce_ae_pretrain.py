@@ -16,6 +16,7 @@ import wandb
 import pdb
 import pickle
 from scheduler_lr import step_lr
+from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
@@ -68,7 +69,7 @@ pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
 precision_degree = [10, 20, 50, 100]
-loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg'
+loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg' # 'mse_and_homophily'
 intitializer = torch.nn.init.kaiming_uniform_
 filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
           #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
@@ -144,15 +145,18 @@ for epoch in range(max_epoch):
     
     epoch_loss = 0
 
-    for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+    for i, (feature, label, cell_type) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature
-        predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
+        predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
-        loss.backward()
+        loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_t = loss + 0.5 * loss_2
+        loss_t.backward()
+        print(loss.item(), loss_2.item())
         optimizer.step()
         epoch_loss += loss.item()
     
@@ -166,7 +170,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
             loss = model.loss(label, predict)
@@ -201,13 +205,13 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
-            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_liner_')
+            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_with_noise_')
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
             loss = model.loss(label, predict)
