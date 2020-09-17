@@ -145,8 +145,7 @@ for epoch in range(max_epoch):
 
     epoch_loss = 0
 
-    for i, batch, cell_type in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-        ft, lb = batch
+    for i, (ft, lb, cell_type) in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         drug = ft['drug']
         mask = ft['mask']
         if data.use_pert_type:
@@ -185,8 +184,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, num_gene])
     predict_np = np.empty([0, num_gene])
     with torch.no_grad():
-        for i, batch, _ in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
-            ft, lb = batch
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
             if data.use_pert_type:
@@ -244,8 +242,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, num_gene])
     predict_np = np.empty([0, num_gene])
     with torch.no_grad():
-        for i, batch, _ in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            ft, lb = batch
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
             if data.use_pert_type:
