@@ -110,6 +110,7 @@ def read_data(input_file, filter):
             lb = choose_mean_example(lb)
             label.append(lb)
     _, cell_type = np.unique(np.asarray(feature[2]), return_inverse=True)
+    pdb.set_trace()
     return np.asarray(feature), np.asarray(label, dtype=np.float64), cell_type
 
 
