@@ -109,7 +109,8 @@ def read_data(input_file, filter):
         else:
             lb = choose_mean_example(lb)
             label.append(lb)
-    return np.asarray(feature), np.asarray(label, dtype=np.float64), np.asarray(feature[2])
+    _, cell_type = np.unique(np.asarray(feature[2]), return_inverse=True)
+    return np.asarray(feature), np.asarray(label, dtype=np.float64), cell_type
 
 
 def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feature_test, label_test, drug,
