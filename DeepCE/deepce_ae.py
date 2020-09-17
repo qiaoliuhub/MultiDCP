@@ -16,6 +16,7 @@ import wandb
 import pdb
 import pickle
 from scheduler_lr import step_lr
+from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
@@ -144,17 +145,20 @@ for epoch in range(max_epoch):
     
     epoch_loss = 0
 
-    for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-        
+    for i, (feature, label, cell_type) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature
-        predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
+        predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
-        loss.backward()
+        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_t = loss + 0.5 * loss_2
+        loss_t.backward()
+        print(loss.item(), loss_2.item())
         optimizer.step()
-        epoch_loss += loss.item()
+        epoch_loss += loss.item()   
     
     print('AE Train loss:')
     print(epoch_loss/(i+1))
@@ -166,8 +170,8 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
-            predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
+        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+            predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
@@ -201,7 +205,7 @@ for epoch in range(max_epoch):
 
     epoch_loss = 0
 
-    for i, batch in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+    for i, batch, cell_type in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
         ft, lb = batch
         drug = ft['drug']
         mask = ft['mask']
@@ -221,7 +225,9 @@ for epoch in range(max_epoch):
         predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
-        loss.backward()
+        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_t = loss + 0.5 * loss_2
+        loss_t.backward()
         optimizer.step()
         epoch_loss += loss.item()
     print('Perturbed gene expression profile Train loss:')
@@ -287,8 +293,8 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
     with torch.no_grad():
-        for i, (feature, label) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            predict = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
+        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+            predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
