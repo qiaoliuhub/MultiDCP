@@ -30,7 +30,7 @@ class GaussianNoise(nn.Module):
     def forward(self, x):
         if self.training and self.sigma != 0:
             scale = self.sigma * x.detach() if self.is_relative_detach else self.sigma * x
-            sampled_noise = self.noise.repeat(*x.size()).normal_() * scale
+            sampled_noise = self.noise.repeat(*x.size()).float().normal_() * scale
             x = x + sampled_noise
         return x 
 
@@ -102,7 +102,7 @@ class DeepCESub(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = True):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         num_batch = input_drug['molecules'].batch_size
@@ -415,7 +415,6 @@ class DeepCE_AE(DeepCE):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
-                pdb.set_trace()
             out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
@@ -466,7 +465,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict('best_sub_deepce_storage_')
+            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 10**-7)

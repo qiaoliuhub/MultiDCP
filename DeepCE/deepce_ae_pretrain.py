@@ -63,7 +63,7 @@ degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
 cell_id_emb_dim = 32
-cell_decoder_dim = 2145 # autoencoder label's dimension
+cell_decoder_dim = 2050 # autoencoder label's dimension
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
@@ -201,7 +201,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
-            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_')
+            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_liner_')
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
