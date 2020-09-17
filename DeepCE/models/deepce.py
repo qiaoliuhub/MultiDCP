@@ -239,11 +239,11 @@ class DeepCE(nn.Module):
             #     else:
             #         self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = True):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         # out = [batch * num_gene * hid_dim]
-        return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
+        return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch, linear_only = linear_only)
 
     def loss(self, label, predict):
         if self.loss_type == 'point_wise_mse':

@@ -153,7 +153,7 @@ for epoch in range(max_epoch):
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
-        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_2 =  apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss + 0.5 * loss_2
         loss_t.backward()
         print(loss.item(), loss_2.item())
@@ -231,7 +231,7 @@ for epoch in range(max_epoch):
         predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
-        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss + 0.5 * loss_2
         loss_t.backward()
         optimizer.step()
