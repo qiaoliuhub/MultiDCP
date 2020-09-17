@@ -16,11 +16,11 @@ class NodeHomophily(torch.autograd.Function):
         :param cell_label: the cell id in type long
         :return: [batch, ranking_size], each row represents the log_cumsum_exp value
         """
-        BETA = torch.tensor(0.5).to(device)
         if torch.cuda.is_available():
             device = torch.device("cuda")
         else:
             device = torch.device("cpu")
+        BETA = torch.tensor(0.5).to(device)
         A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).long().to(device)
         T = torch.diag(torch.sum(A, axis = 1)).to(device)
         t_minus_a = (T-A).to(device)
