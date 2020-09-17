@@ -92,8 +92,7 @@ class DataReader(object):
                 output['cell_id'] = feature['cell_id'][excerpt]
             if self.use_pert_idose:
                 output['pert_idose'] = feature['pert_idose'][excerpt]
-            pdb.set_trace()
-            yield output, label[excerpt], cell_type
+            yield output, label[excerpt], cell_type[excerpt]
 
 
 if __name__ == '__main__':
