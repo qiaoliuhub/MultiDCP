@@ -65,15 +65,15 @@ class DataReader(object):
         if dataset == 'train':
             feature = self.train_feature
             label = self.train_label
-            cell_type = self.train_cell_type
+            cell_type = torch.Tensor(self.train_cell_type).to(self.device)
         elif dataset == 'dev':
             feature = self.dev_feature
             label = self.dev_label
-            cell_type = self.dev_cell_type
+            cell_type = torch.Tensor(self.dev_cell_type).to(self.device)
         elif dataset == 'test':
             feature = self.test_feature
             label = self.test_label
-            cell_type = self.test_cell_type
+            cell_type = torch.Tensor(self.test_cell_type).to(self.device)
         if shuffle:
             index = torch.randperm(len(feature['drug'])).long()
             index = index.numpy()
