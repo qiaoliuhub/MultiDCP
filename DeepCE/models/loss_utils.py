@@ -17,8 +17,8 @@ class NodeHomophily(torch.autograd.Function):
         :return: [batch, ranking_size], each row represents the log_cumsum_exp value
         """
         A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).long().to(device)
-        T = torch.diag(torch.sum(A, axis = 1))
-        t_minus_a = T-A
+        T = torch.diag(torch.sum(A, axis = 1)).to(device)
+        t_minus_a = (T-A).to(device)
         ctx.save_for_backward(input, t_minus_a)
         return torch.trace(torch.mm(torch.mm(input.T, t_minus_a), input))
 
