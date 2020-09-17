@@ -134,7 +134,7 @@ class DeepCESub(nn.Module):
                 # cell_id_embed = [batch * cell_id_emb_dim(32)]
                 cell_id_embed = cell_id_embed.unsqueeze(1)
                 # cell_id_embed = [batch * 1 * cell_id_emb_dim]
-                cell_hidden_ cell_id_embed.contiguous().view(cell_id_embed.size(0), -1)
+                cell_hidden_ = cell_id_embed.contiguous().view(cell_id_embed.size(0), -1)
                 cell_id_embed = cell_id_embed.repeat(1, self.num_gene, 1)
                 # cell_id_embed = [batch * num_gene * cell_id_emb_dim(32)]
             else:
