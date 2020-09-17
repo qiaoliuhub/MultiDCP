@@ -170,7 +170,8 @@ for epoch in range(max_epoch):
         epoch_loss += loss.item()
     print('Perturbed gene expression profile Train loss:')
     print(epoch_loss/(i+1))
-    wandb.log({'Perturbed gene expression profile Train loss': epoch_loss/(i+1)}, step = epoch)
+    if USE_wandb:
+	wandb.log({'Perturbed gene expression profile Train loss': epoch_loss/(i+1)}, step = epoch)
 
     model.eval()
 
@@ -201,27 +202,33 @@ for epoch in range(max_epoch):
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
         print('Perturbed gene expression profile Dev loss:')
         print(epoch_loss / (i + 1))
-        wandb.log({'Perturbed gene expression profile Dev loss': epoch_loss/(i+1)}, step=epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Dev loss': epoch_loss/(i+1)}, step=epoch)
         rmse = metric.rmse(lb_np, predict_np)
         rmse_list_perturbed_dev.append(rmse)
         print('Perturbed gene expression profile RMSE: %.4f' % rmse)
-        wandb.log({'Perturbed gene expression profile Dev RMSE': rmse}, step=epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Dev RMSE': rmse}, step=epoch)
         pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_list_perturbed_dev.append(pearson)
         print('Perturbed gene expression profile Pearson\'s correlation: %.4f' % pearson)
-        wandb.log({'Perturbed gene expression profile Dev Pearson': pearson}, step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Dev Pearson': pearson}, step = epoch)
         spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_list_perturbed_dev.append(spearman)
         print('Perturbed gene expression profile Spearman\'s correlation: %.4f' % spearman)
-        wandb.log({'Perturbed gene expression profile Dev Spearman': spearman}, step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Dev Spearman': spearman}, step = epoch)
         perturbed_precision = []
         for k in precision_degree:
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            # wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
-            # wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
-            perturbed_precision.append([precision_pos, precision_neg])
+            # if USE_wandb:
+	    # wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
+            # if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
+            # perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
         if best_dev_pearson < pearson:
@@ -254,26 +261,32 @@ for epoch in range(max_epoch):
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
-        wandb.log({'Perturbed gene expression profile Test Loss': epoch_loss / (i + 1)}, step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Test Loss': epoch_loss / (i + 1)}, step = epoch)
         rmse = metric.rmse(lb_np, predict_np)
         rmse_list_perturbed_test.append(rmse)
         print('Perturbed gene expression profile RMSE: %.4f' % rmse)
-        wandb.log({'Perturbed gene expression profile Test RMSE': rmse} , step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Test RMSE': rmse} , step = epoch)
         pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_list_perturbed_test.append(pearson)
         print('Perturbed gene expression profile Pearson\'s correlation: %.4f' % pearson)
-        wandb.log({'Perturbed gene expression profile Test Pearson': pearson}, step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Test Pearson': pearson}, step = epoch)
         spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_list_perturbed_test.append(spearman)
         print('Perturbed gene expression profile Spearman\'s correlation: %.4f' % spearman)
-        wandb.log({'Perturbed gene expression profile Test Spearman': spearman}, step = epoch)
+        if USE_wandb:
+	    wandb.log({'Perturbed gene expression profile Test Spearman': spearman}, step = epoch)
         perturbed_precision_test = []
         for k in precision_degree:
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            # wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
-            # wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
+            # if USE_wandb:
+	    # wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
+            # if USE_wandb:
+	    # wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
             perturbed_precision_test.append([precision_pos, precision_neg])
         precisionk_list_perturbed_test.append(perturbed_precision_test)
 
