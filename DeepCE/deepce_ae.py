@@ -153,11 +153,14 @@ for epoch in range(max_epoch):
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
-        loss_2 =  apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 0.5 * loss_2
+        loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_t = loss + 0.001 * loss_2
         loss_t.backward()
-        print(loss.item(), loss_2.item())
         optimizer.step()
+        print(loss.item(), loss_2.item())
+        if i == 1:
+            print('__________________________hidden__________________________')
+            print(cell_hidden_)
         epoch_loss += loss.item()   
     
     print('AE Train loss:')
@@ -232,12 +235,13 @@ for epoch in range(max_epoch):
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
-        if i == 1:
-            print('___________________cell_hidden___________________________')
-            print(cell_hidden_)
-        loss_t = loss + 0.01 * loss_2
+        loss_t = loss + 0.001 * loss_2
         loss_t.backward()
         optimizer.step()
+        print(loss.item(), loss_2.item())
+        if i == 1:
+            print('__________________________hidden__________________________')
+            print(cell_hidden_)
         epoch_loss += loss.item()
     print('Perturbed gene expression profile Train loss:')
     print(epoch_loss/(i+1))
