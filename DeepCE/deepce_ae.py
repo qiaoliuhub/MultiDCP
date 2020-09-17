@@ -152,7 +152,6 @@ for epoch in range(max_epoch):
         predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
-        pdb.set_trace()
         loss = model.loss(label, predict)
         loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss + 0.5 * loss_2
