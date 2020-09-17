@@ -5,7 +5,7 @@ import numpy as np
 class NodeHomophily(torch.autograd.Function):
     # The PyTorch OP corresponding to the operation: log{ |sum_k^m{ exp{pred_k} } }
     @staticmethod
-    def forward(ctx, input, cell_label, device = torch.device("cpu")):
+    def forward(ctx, input, cell_label):
         """
         In the forward pass we receive a context object and a Tensor containing the input;
         we must return a Tensor containing the output, and we can use the context object to cache objects for use in the backward pass.
@@ -16,6 +16,10 @@ class NodeHomophily(torch.autograd.Function):
         :param cell_label: the cell id in type long
         :return: [batch, ranking_size], each row represents the log_cumsum_exp value
         """
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
         A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).long().to(device)
         T = torch.diag(torch.sum(A, axis = 1)).to(device)
         t_minus_a = (T-A).to(device)
@@ -38,7 +42,7 @@ class NodeHomophily(torch.autograd.Function):
         input, t_minus_a = ctx.saved_tensors
         # chain rule
         bk_output = grad_output * (torch.mm(t_minus_a, input))
-        return bk_output
+        return bk_output, None
 
 apply_NodeHomophily = NodeHomophily.apply
 
