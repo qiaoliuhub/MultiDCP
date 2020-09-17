@@ -232,6 +232,8 @@ for epoch in range(max_epoch):
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+        print('___________________cell_hidden___________________________')
+        print(cell_hidden_)
         loss_t = loss + 0.5 * loss_2
         loss_t.backward()
         optimizer.step()

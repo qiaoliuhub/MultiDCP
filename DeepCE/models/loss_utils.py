@@ -21,11 +21,14 @@ class NodeHomophily(torch.autograd.Function):
             device = torch.device("cuda")
         else:
             device = torch.device("cpu")
+        BETA = torch.tensor(0.5).to(device)
         A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).long().to(device)
         T = torch.diag(torch.sum(A, axis = 1)).to(device)
         t_minus_a = (T-A).float().to(device)
-        ctx.save_for_backward(input, t_minus_a)
-        return torch.trace(torch.mm(torch.mm(input.T, t_minus_a.double()), input))
+        frobenius_norm = torch.norm(input).to(device)
+        pdb.set_trace()
+        ctx.save_for_backward(input, t_minus_a, BETA)
+        return torch.trace(torch.mm(torch.mm(input.T, t_minus_a.double()), input)) + torch.matmul(BETA, frobenius_norm)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -40,9 +43,10 @@ class NodeHomophily(torch.autograd.Function):
         :param grad_output:
         :return:
         """
-        input, t_minus_a = ctx.saved_tensors
+        input, t_minus_a, BETA = ctx.saved_tensors
         # chain rule
-        bk_output = grad_output * (torch.mm(t_minus_a, input.float()))
+        #bk_output = grad_output * (torch.mm(t_minus_a, input.float()))
+        bk_output = grad_output * (torch.mm(t_minus_a, input.float())) + torch.matmul(BETA, input.float())
         return bk_output, None
 
 apply_NodeHomophily = NodeHomophily.apply
