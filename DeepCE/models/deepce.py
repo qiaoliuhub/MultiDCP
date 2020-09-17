@@ -148,7 +148,8 @@ class DeepCESub(nn.Module):
                 cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
                 # cell_id_embed = [batch * cell_id_emb_dim * 1]
                 
-                cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
+                cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transforme
+                pdb.set_trace()
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_pre.pt')

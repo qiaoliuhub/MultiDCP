@@ -18,7 +18,7 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 
-USE_wandb = True
+USE_wandb = False
 if USE_wandb:
     wandb.init(project="DeepCE_AE_1")
 else:
@@ -64,7 +64,7 @@ degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
 cell_id_emb_dim = 32
-cell_decoder_dim = 2050 # autoencoder label's dimension
+cell_decoder_dim = 978 # autoencoder label's dimension
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
@@ -152,6 +152,7 @@ for epoch in range(max_epoch):
         predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
+        pdb.set_trace()
         loss = model.loss(label, predict)
         loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss + 0.5 * loss_2
