@@ -46,7 +46,7 @@ class AEDataReader(object):
                 excerpt = index[start_idx: start_idx + batch_size]
             else:
                 excerpt = slice(start_idx, start_idx + batch_size)
-            yield feature[excerpt], label[excerpt], torch.Tensor([*range(len(excerpt))]).long()
+            yield feature[excerpt], label[excerpt], torch.Tensor([*range(len(feature[excerpt]))]).long()
 
 class DataReader(object):
     def __init__(self, drug_file, gene_file, data_file_train, data_file_dev, data_file_test,
