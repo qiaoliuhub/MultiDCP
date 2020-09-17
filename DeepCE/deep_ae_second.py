@@ -16,11 +16,10 @@ import wandb
 import pdb
 import pickle
 from scheduler_lr import step_lr
-from loss_utils import apply_NodeHomophily
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE_1")
+    wandb.init(project="DeepCE_AE")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -64,7 +63,7 @@ degree = [0, 1, 2, 3, 4, 5]
 gene_embed_dim = 128
 pert_type_emb_dim = 4
 cell_id_emb_dim = 32
-cell_decoder_dim = 978 # autoencoder label's dimension
+cell_decoder_dim = 2145 # autoencoder label's dimension
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
@@ -100,6 +99,7 @@ model = deepce.DeepCE_AE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_
                       cell_id_emb_dim=cell_id_emb_dim, cell_decoder_dim = cell_decoder_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
                       use_pert_idose=data.use_pert_idose)
+model.init_weights(pretrained = True)
 model.to(device)
 model = model.double()
 if USE_wandb:
@@ -142,74 +142,6 @@ for epoch in range(max_epoch):
     print(unfreeze_pattern)
     print("Iteration %d:" % (epoch+1))
     model.train()
-    
-    epoch_loss = 0
-
-    for i, (feature, label, cell_type) in enumerate(ae_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-
-        optimizer.zero_grad()
-        #### the auto encoder step doesn't need other input rather than feature
-        predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
-        #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
-        pdb.set_trace()
-        loss = model.loss(label, predict)
-        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 0.5 * loss_2
-        loss_t.backward()
-        print(loss.item(), loss_2.item())
-        optimizer.step()
-        epoch_loss += loss.item()   
-    
-    print('AE Train loss:')
-    print(epoch_loss/(i+1))
-    if USE_wandb:
-        wandb.log({'AE Train loss': epoch_loss/(i+1)}, step = epoch)
-
-    model.eval()
-
-    epoch_loss = 0
-    lb_np = np.empty([0, cell_decoder_dim])
-    predict_np = np.empty([0, cell_decoder_dim])
-    with torch.no_grad():
-        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
-            predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
-            loss = model.loss(label, predict)
-            epoch_loss += loss.item()
-            lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
-
-        print('AE Dev loss:')
-        print(epoch_loss / (i + 1))
-        if USE_wandb:
-            wandb.log({'AE Dev loss': epoch_loss/(i+1)}, step=epoch)
-        rmse = metric.rmse(lb_np, predict_np)
-        rmse_list_ae_dev.append(rmse)
-        print('AE RMSE: %.4f' % rmse)
-        if USE_wandb:
-            wandb.log({'AE Dev RMSE': rmse}, step=epoch)
-        pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
-        pearson_list_ae_dev.append(pearson)
-        print('AE Pearson\'s correlation: %.4f' % pearson)
-        if USE_wandb:
-            wandb.log({'AE Dev Pearson': pearson}, step = epoch)
-        spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
-        spearman_list_ae_dev.append(spearman)
-        print('AE Spearman\'s correlation: %.4f' % spearman)
-        if USE_wandb:
-            wandb.log({'AE Dev Spearman': spearman}, step = epoch)
-        ae_precision = []
-        for k in precision_degree:
-            precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
-            print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
-            print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
-            # if USE_wandb:
-            # wandb.log({'AE Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
-            # if USE_wandb:
-            # wandb.log({'AE Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
-            ae_precision.append([precision_pos, precision_neg])
-        precisionk_list_ae_dev.append(ae_precision)
 
     epoch_loss = 0
 
@@ -294,58 +226,15 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            # if USE_wandb:
+            # if E_wandb:
             # wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
-            # if USE_wandb:
+            # if E_wandb:
             # wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
             perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
-
-    epoch_loss = 0
-    lb_np = np.empty([0, cell_decoder_dim])
-    predict_np = np.empty([0, cell_decoder_dim])
-    with torch.no_grad():
-        for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
-            loss = model.loss(label, predict)
-            epoch_loss += loss.item()
-            lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
-        print('AE Test loss:')
-        print(epoch_loss / (i + 1))
-        if USE_wandb:
-            wandb.log({'AE Test Loss': epoch_loss / (i + 1)}, step = epoch)
-        rmse = metric.rmse(lb_np, predict_np)
-        rmse_list_ae_test.append(rmse)
-        print('AE RMSE: %.4f' % rmse)
-        if USE_wandb:
-            wandb.log({'AE Test RMSE': rmse} , step = epoch)
-        pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
-        pearson_list_ae_test.append(pearson)
-        print('AE Pearson\'s correlation: %.4f' % pearson)
-        if USE_wandb:
-            wandb.log({'AE Test Pearson': pearson}, step = epoch)
-        spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
-        spearman_list_ae_test.append(spearman)
-        print('AE Spearman\'s correlation: %.4f' % spearman)
-        if USE_wandb:
-            wandb.log({'AE Test Spearman': spearman}, step = epoch)
-        ae_precision_test = []
-        for k in precision_degree:
-            precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
-            print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
-            print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
-            # if USE_wandb:
-            # wandb.log({'AE Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
-            # if USE_wandb:
-            # wandb.log({'AE Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
-            ae_precision_test.append([precision_pos, precision_neg])
-        precisionk_list_ae_test.append(ae_precision_test)
-
 
     epoch_loss = 0
     lb_np = np.empty([0, num_gene])
@@ -396,20 +285,14 @@ for epoch in range(max_epoch):
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
             print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
-            # if USE_wandb:
+            # if E_wandb:
             # wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
-            # if USE_wandb:
+            # if E_wandb:
             # wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
             perturbed_precision_test.append([precision_pos, precision_neg])
         precisionk_list_perturbed_test.append(perturbed_precision_test)
 
 best_dev_epoch = np.argmax(pearson_list_perturbed_dev)
-print("Epoch %d got best AE Pearson's correlation on dev set: %.4f" % (best_dev_epoch + 1, pearson_list_ae_dev[best_dev_epoch]))
-print("Epoch %d got AE Spearman's correlation on dev set: %.4f" % (best_dev_epoch + 1, spearman_list_ae_dev[best_dev_epoch]))
-print("Epoch %d got AE RMSE on dev set: %.4f" % (best_dev_epoch + 1, rmse_list_ae_dev[best_dev_epoch]))
-print("Epoch %d got AE P@100 POS and NEG on dev set: %.4f, %.4f" % (best_dev_epoch + 1,
-                                                                  precisionk_list_ae_dev[best_dev_epoch][-1][0],
-                                                                  precisionk_list_ae_dev[best_dev_epoch][-1][1]))
 
 print("Epoch %d got best Perturbed Pearson's correlation on dev set: %.4f" % (best_dev_epoch + 1, pearson_list_perturbed_dev[best_dev_epoch]))
 print("Epoch %d got Perturbed Spearman's correlation on dev set: %.4f" % (best_dev_epoch + 1, spearman_list_perturbed_dev[best_dev_epoch]))
@@ -417,13 +300,6 @@ print("Epoch %d got Perturbed RMSE on dev set: %.4f" % (best_dev_epoch + 1, rmse
 print("Epoch %d got Perturbed P@100 POS and NEG on dev set: %.4f, %.4f" % (best_dev_epoch + 1,
                                                                   precisionk_list_perturbed_dev[best_dev_epoch][-1][0],
                                                                   precisionk_list_perturbed_dev[best_dev_epoch][-1][1]))
-
-print("Epoch %d got AE Pearson's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, pearson_list_ae_test[best_dev_epoch]))
-print("Epoch %d got AE Spearman's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, spearman_list_ae_test[best_dev_epoch]))
-print("Epoch %d got AE RMSE on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, rmse_list_ae_test[best_dev_epoch]))
-print("Epoch %d got AE P@100 POS and NEG on test set w.r.t dev set: %.4f, %.4f" % (best_dev_epoch + 1,
-                                                                  precisionk_list_ae_test[best_dev_epoch][-1][0],
-                                                                  precisionk_list_ae_test[best_dev_epoch][-1][1]))
 
 print("Epoch %d got Perturbed Pearson's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, pearson_list_perturbed_test[best_dev_epoch]))
 print("Epoch %d got Perturbed Spearman's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, spearman_list_perturbed_test[best_dev_epoch]))
@@ -433,12 +309,6 @@ print("Epoch %d got Perturbed P@100 POS and NEG on test set w.r.t dev set: %.4f,
                                                                   precisionk_list_perturbed_test[best_dev_epoch][-1][1]))
 
 best_test_epoch = np.argmax(pearson_list_perturbed_test)
-print("Epoch %d got AE best Pearson's correlation on test set: %.4f" % (best_test_epoch + 1, pearson_list_ae_test[best_test_epoch]))
-print("Epoch %d got AE Spearman's correlation on test set: %.4f" % (best_test_epoch + 1, spearman_list_ae_test[best_test_epoch]))
-print("Epoch %d got AE RMSE on test set: %.4f" % (best_test_epoch + 1, rmse_list_ae_test[best_test_epoch]))
-print("Epoch %d got AE P@100 POS and NEG on test set: %.4f, %.4f" % (best_test_epoch + 1,
-                                                                  precisionk_list_ae_test[best_test_epoch][-1][0],
-                                                                  precisionk_list_ae_test[best_test_epoch][-1][1]))
 
 print("Epoch %d got Perturbed best Pearson's correlation on test set: %.4f" % (best_test_epoch + 1, pearson_list_perturbed_test[best_test_epoch]))
 print("Epoch %d got Perturbed Spearman's correlation on test set: %.4f" % (best_test_epoch + 1, spearman_list_perturbed_test[best_test_epoch]))

@@ -153,7 +153,11 @@ for epoch in range(max_epoch):
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
+<<<<<<< HEAD
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+=======
+        loss_2 = (10 ** 5) * apply_NodeHomophily(cell_hidden_, cell_type)
+>>>>>>> f231483e854a13dd06e53d2d983d2d53789d926e
         loss_t = loss + 0.5 * loss_2
         loss_t.backward()
         print(loss.item(), loss_2.item() * (10 ** 8))
@@ -162,7 +166,8 @@ for epoch in range(max_epoch):
     
     print('AE Train loss:')
     print(epoch_loss/(i+1))
-    wandb.log({'AE Train loss': epoch_loss/(i+1)}, step = epoch)
+    if USE_wandb:
+        wandb.log({'AE Train loss': epoch_loss/(i+1)}, step = epoch)
 
     model.eval()
 
@@ -180,25 +185,31 @@ for epoch in range(max_epoch):
 
         print('AE Dev loss:')
         print(epoch_loss / (i + 1))
-        wandb.log({'AE Dev loss': epoch_loss/(i+1)}, step=epoch)
+        if USE_wandb:
+            wandb.log({'AE Dev loss': epoch_loss/(i+1)}, step=epoch)
         rmse = metric.rmse(lb_np, predict_np)
         rmse_list_ae_dev.append(rmse)
         print('AE RMSE: %.4f' % rmse)
-        wandb.log({'AE Dev RMSE': rmse}, step=epoch)
+        if USE_wandb:
+            wandb.log({'AE Dev RMSE': rmse}, step=epoch)
         pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_list_ae_dev.append(pearson)
         print('AE Pearson\'s correlation: %.4f' % pearson)
-        wandb.log({'AE Dev Pearson': pearson}, step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Dev Pearson': pearson}, step = epoch)
         spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_list_ae_dev.append(spearman)
         print('AE Spearman\'s correlation: %.4f' % spearman)
-        wandb.log({'AE Dev Spearman': spearman}, step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Dev Spearman': spearman}, step = epoch)
         ae_precision = []
         for k in precision_degree:
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
             print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
+            # if USE_wandb:
             # wandb.log({'AE Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
+            # if USE_wandb:
             # wandb.log({'AE Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
             ae_precision.append([precision_pos, precision_neg])
         precisionk_list_ae_dev.append(ae_precision)
@@ -220,25 +231,31 @@ for epoch in range(max_epoch):
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
         print('AE Test loss:')
         print(epoch_loss / (i + 1))
-        wandb.log({'AE Test Loss': epoch_loss / (i + 1)}, step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Test Loss': epoch_loss / (i + 1)}, step = epoch)
         rmse = metric.rmse(lb_np, predict_np)
         rmse_list_ae_test.append(rmse)
         print('AE RMSE: %.4f' % rmse)
-        wandb.log({'AE Test RMSE': rmse} , step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Test RMSE': rmse} , step = epoch)
         pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_list_ae_test.append(pearson)
         print('AE Pearson\'s correlation: %.4f' % pearson)
-        wandb.log({'AE Test Pearson': pearson}, step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Test Pearson': pearson}, step = epoch)
         spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_list_ae_test.append(spearman)
         print('AE Spearman\'s correlation: %.4f' % spearman)
-        wandb.log({'AE Test Spearman': spearman}, step = epoch)
+        if USE_wandb:
+            wandb.log({'AE Test Spearman': spearman}, step = epoch)
         ae_precision_test = []
         for k in precision_degree:
             precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
             print("AE Precision@%d Positive: %.4f" % (k, precision_pos))
             print("AE Precision@%d Negative: %.4f" % (k, precision_neg))
+            # if USE_wandb:
             # wandb.log({'AE Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
+            # if USE_wandb:
             # wandb.log({'AE Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
             ae_precision_test.append([precision_pos, precision_neg])
         precisionk_list_ae_test.append(ae_precision_test)
