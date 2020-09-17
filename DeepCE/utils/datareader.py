@@ -45,7 +45,7 @@ class AEDataReader(object):
                 excerpt = index[start_idx: start_idx + batch_size]
             else:
                 excerpt = slice(start_idx, start_idx + batch_size)
-            yield feature[excerpt], label[excerpt]
+            yield feature[excerpt], label[excerpt], torch.Tensor([*range(len(excerpt))]).long()
 
 class DataReader(object):
     def __init__(self, drug_file, gene_file, data_file_train, data_file_dev, data_file_test,
@@ -53,9 +53,9 @@ class DataReader(object):
         self.device = device
         self.drug, self.drug_dim = data_utils.read_drug_string(drug_file)
         self.gene = data_utils.read_gene(gene_file, self.device)
-        feature_train, label_train = data_utils.read_data(data_file_train, filter)
-        feature_dev, label_dev = data_utils.read_data(data_file_dev, filter)
-        feature_test, label_test = data_utils.read_data(data_file_test, filter)
+        feature_train, label_train, self.train_cell_type = data_utils.read_data(data_file_train, filter)
+        feature_dev, label_dev, self.dev_cell_type = data_utils.read_data(data_file_dev, filter)
+        feature_test, label_test, self.test_cell_type = data_utils.read_data(data_file_test, filter)
         self.train_feature, self.dev_feature, self.test_feature, self.train_label, \
         self.dev_label, self.test_label, self.use_pert_type, self.use_cell_id, self.use_pert_idose = \
             data_utils.transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev,
@@ -65,12 +65,15 @@ class DataReader(object):
         if dataset == 'train':
             feature = self.train_feature
             label = self.train_label
+            cell_type = self.train_cell_type
         elif dataset == 'dev':
             feature = self.dev_feature
             label = self.dev_label
+            cell_type = self.dev_cell_type
         elif dataset == 'test':
             feature = self.test_feature
             label = self.test_label
+            cell_type = self.test_cell_type
         if shuffle:
             index = torch.randperm(len(feature['drug'])).long()
             index = index.numpy()
@@ -88,7 +91,7 @@ class DataReader(object):
                 output['cell_id'] = feature['cell_id'][excerpt]
             if self.use_pert_idose:
                 output['pert_idose'] = feature['pert_idose'][excerpt]
-            yield output, label[excerpt]
+            yield output, label[excerpt], cell_type
 
 
 if __name__ == '__main__':

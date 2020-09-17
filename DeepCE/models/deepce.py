@@ -3,7 +3,7 @@ import torch.nn as nn
 from neural_fingerprint import NeuralFingerprint
 from drug_gene_attention import DrugGeneAttention
 from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_wise_ranknet, list_wise_rankcosine, \
-    list_wise_ndcg, combine_loss
+    list_wise_ndcg, combine_loss, mse_plus_homophily
 import pdb
 from reformer_pytorch import Reformer
 
@@ -29,8 +29,8 @@ class GaussianNoise(nn.Module):
 
     def forward(self, x):
         if self.training and self.sigma != 0:
-            scale = self.sigma * x.detach() if self.is_relative_detach else self.sigma * x
-            sampled_noise = self.noise.repeat(*x.size()).normal_() * scale
+            scale = self.sigma * x.std().detach() if self.is_relative_detach else self.sigma * x.std()
+            sampled_noise = self.noise.repeat(*x.size()).float().normal_() * scale
             x = x + sampled_noise
         return x 
 
@@ -148,6 +148,7 @@ class DeepCESub(nn.Module):
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
+                cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1)
                 cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
                 # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
@@ -164,7 +165,7 @@ class DeepCESub(nn.Module):
         # drug_gene_embed = [batch * num_gene * (drug_embed + gene_embed + pert_type_embed + cell_id_embed + pert_idose_embed)]
         out = self.linear_1(drug_gene_embed)
         # out = [batch * num_gene * hid_dim]
-        return out
+        return out, cell_hidden_
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True]):
         ### unfreeze_pattern is a list a Three boolean value to indicate whether each layer should be frozen
@@ -265,7 +266,7 @@ class DeepCEOriginal(DeepCE):
         self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)[0]
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
@@ -324,7 +325,7 @@ class DeepCEPretraining(DeepCE):
         super().init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)[0]
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
@@ -366,7 +367,7 @@ class DeepCEEhillPretraining(DeepCE):
         super().init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)[0]
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
@@ -407,7 +408,7 @@ class DeepCE_AE(DeepCE):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
-            out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
+            out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
             # out = [batch * num_gene * hid_dim]
@@ -417,7 +418,7 @@ class DeepCE_AE(DeepCE):
             if epoch % 100 == 1:
                 torch.save(out, 'predicted_cell_feature.pt')
             # out = [batch * num_gene]
-            return out
+            return out, cell_hidden_
         else:
             hidden = self.guassian_noise(input_cell_id)
             hidden = self.sub_deepce.cell_id_embed(hidden)
@@ -435,8 +436,8 @@ class DeepCE_AE(DeepCE):
             hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
             # hidden = [batch * cell_id_emb_dim * ]
             
-            hidden = self.decoder_1(hidden).squeeze(-1)
-            out_2 = self.decoder_2(hidden)
+            cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
+            out_2 = self.decoder_2(cell_hidden_)
             
             if epoch % 100 == 1:
                 print(input_cell_id)
@@ -444,7 +445,7 @@ class DeepCE_AE(DeepCE):
                 new_out_2 = out_2.clone()
                 torch.save(new_out_2, 'new_out_2.pt')
             # out_2 = [batch * cell_decoder_dim]
-            return out_2
+            return out_2, cell_hidden_
     
     def init_weights(self, pretrained = False):
         print('Initialized deepce original\'s weight............')
@@ -457,7 +458,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict('best_sub_deepce_storage_')
+            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 0.)
@@ -474,3 +475,10 @@ class DeepCE_AE(DeepCE):
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
+
+    # def loss(self, label, predict, hidden = None, cell_type = None):
+    #     if self.loss_type == 'mse_and_homophily' and hidden is not None and cell_type is not None:
+    #         loss = mse_plus_homophily(label, predict, hidden, cell_type)
+    #         return loss
+    #     else:
+    #         return super.loss()
