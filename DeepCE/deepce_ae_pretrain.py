@@ -20,7 +20,7 @@ from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE")
+    wandb.init(project="DeepCE_AE_loss")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
