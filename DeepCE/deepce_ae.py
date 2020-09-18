@@ -90,6 +90,10 @@ print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
 
+print('#Train AE: %d' % len(ae_data.train_feature))
+print('#Dev AE: %d' % len(ae_data.dev_feature))
+print('#Test AE: %d' % len(ae_data.test_feature))
+
 # model creation
 model = deepce.DeepCE_AE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
                       conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
