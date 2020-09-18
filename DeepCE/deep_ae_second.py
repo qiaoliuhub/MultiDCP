@@ -171,6 +171,10 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
+            print('__________________________input___________________________')
+            print(feature)
+            print('__________________________prediction___________________________')
+            print(predict)
             print('__________________________hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()
@@ -210,6 +214,8 @@ for epoch in range(max_epoch):
         if USE_wandb:
             wandb.log({'Perturbed gene expression profile Dev loss': epoch_loss/(i+1)}, step=epoch)
         rmse = metric.rmse(lb_np, predict_np)
+        torch.save(lb_np, 'lb_np_sec.pt')
+        torch.save(predict_np, 'predict_np_sec.pt')
         rmse_list_perturbed_dev.append(rmse)
         print('Perturbed gene expression profile RMSE: %.4f' % rmse)
         if USE_wandb:
