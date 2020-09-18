@@ -21,13 +21,13 @@ class NodeHomophily(torch.autograd.Function):
             device = torch.device("cuda")
         else:
             device = torch.device("cpu")
-        not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).long().to(device)
+        not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).float().to(device)
         BETA = torch.tensor(0.1).to(device)
         # T = torch.diag(torch.sum(A, axis = 1)).to(device)
         # t_minus_a = (T-A).to(device)
         frobenius_norm = torch.norm(input).to(device)
         ctx.save_for_backward(input, not_A, BETA)
-        return BETA * torch.trace(torch.mm(torch.mm(input.T, not_A.double()), input)) + frobenius_norm
+        return BETA * torch.trace(torch.mm(torch.mm(input.float().T, not_A), input.float())) + frobenius_norm
 
     @staticmethod
     def backward(ctx, grad_output):
