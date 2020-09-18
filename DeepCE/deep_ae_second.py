@@ -18,9 +18,9 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE")
+    wandb.init(project="DeepCE_AE_loss")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -100,7 +100,7 @@ model = deepce.DeepCE_AE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_
                       cell_id_emb_dim=cell_id_emb_dim, cell_decoder_dim = cell_decoder_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
                       use_pert_idose=data.use_pert_idose)
-model.init_weights(pretrained = True)
+# model.init_weights(pretrained = True)
 model.to(device)
 model = model.double()
 if USE_wandb:

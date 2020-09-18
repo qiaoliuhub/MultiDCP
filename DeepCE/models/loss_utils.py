@@ -23,11 +23,12 @@ class NodeHomophily(torch.autograd.Function):
             device = torch.device("cpu")
         not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).float().to(device)
         BETA = torch.tensor(0.1).to(device)
-        # T = torch.diag(torch.sum(A, axis = 1)).to(device)
-        # t_minus_a = (T-A).to(device)
+        not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).float().to(device)
+        T = torch.diag(torch.sum(not_A, axis = 1)).to(device)
+        t_minus_a = (T + not_A).to(device)
         frobenius_norm = torch.norm(input).to(device)
-        ctx.save_for_backward(input, not_A, BETA)
-        return BETA * torch.trace(torch.mm(torch.mm(input.float().T, not_A), input.float())) + frobenius_norm
+        ctx.save_for_backward(input, t_minus_a, BETA)
+        return torch.trace(torch.mm(torch.mm(input.T.float(), t_minus_a), input.float())) + BETA * frobenius_norm
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -46,9 +47,9 @@ class NodeHomophily(torch.autograd.Function):
             device = torch.device("cuda")
         else:
             device = torch.device("cpu")
-        input, not_A, BETA = ctx.saved_tensors
+        input, t_minus_a, BETA = ctx.saved_tensors
         # chain rule
-        bk_output = grad_output * (BETA * torch.tensor(2.0).to(device) * torch.mm(not_A, input.float()) + torch.tensor(2.0).to(device) * input.float())
+        bk_output = grad_output * (torch.tensor(2.0).to(device) * torch.mm(t_minus_a, input.float()) + BETA * torch.tensor(2.0).to(device) * input.float())
         return bk_output, None
 
 apply_NodeHomophily = NodeHomophily.apply
