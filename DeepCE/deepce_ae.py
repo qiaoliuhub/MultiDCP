@@ -20,7 +20,7 @@ from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE")
+    wandb.init(project="DeepCE_AE_loss")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -159,6 +159,10 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
+            print('__________________________input___________________________')
+            print(feature)
+            print('__________________________prediction___________________________')
+            print(predict)
             print('__________________________hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()   
@@ -187,6 +191,8 @@ for epoch in range(max_epoch):
         if USE_wandb:
             wandb.log({'AE Dev loss': epoch_loss/(i+1)}, step=epoch)
         rmse = metric.rmse(lb_np, predict_np)
+        torch.save(lb_np, 'lb_np.pt')
+        torch.save(predict_np, 'predict_np.pt')
         rmse_list_ae_dev.append(rmse)
         print('AE RMSE: %.4f' % rmse)
         if USE_wandb:
