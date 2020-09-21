@@ -188,6 +188,11 @@ for epoch in range(max_epoch):
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
+            if i == 1:
+                print('__________________________input___________________________')
+                print(feature)
+                print('__________________________prediction___________________________')
+                print(predict)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
         print('AE Dev loss:')
