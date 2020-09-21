@@ -102,7 +102,7 @@ class DeepCESub(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = True):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         num_batch = input_drug['molecules'].batch_size
@@ -241,7 +241,7 @@ class DeepCE(nn.Module):
             #     else:
             #         self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = True):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         # out = [batch * num_gene * hid_dim]
@@ -422,7 +422,7 @@ class DeepCE_AE(DeepCE):
         self.decoder_linear = nn.Sequential(nn.Linear(cell_id_emb_dim, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = True):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = False):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
@@ -460,7 +460,7 @@ class DeepCE_AE(DeepCE):
                 # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
                 hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
                 # hidden = [batch * cell_id_emb_dim * 32]
-                cell_hidden_ = torch.max(cell_id_embed, -1)
+                cell_hidden_ = torch.max(hidden, -1)
                 # cell_hidden_ = [batch * cell_id_emb_dim]
                 # cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
                 # cell_hidden_ = [batch * ]

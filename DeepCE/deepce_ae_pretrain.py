@@ -154,10 +154,17 @@ for epoch in range(max_epoch):
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 0.5 * loss_2
+        loss_t = loss + 0.001 * loss_2
         loss_t.backward()
-        print(loss.item(), loss_2.item() * (10 ** 8))
         optimizer.step()
+        print(loss.item(), loss_2.item())
+        if i == 1:
+            print('__________________________input___________________________')
+            print(feature)
+            print('__________________________prediction___________________________')
+            print(predict)
+            print('__________________________hidden__________________________')
+            print(cell_hidden_)
         epoch_loss += loss.item()
     
     print('AE Train loss:')
@@ -177,6 +184,11 @@ for epoch in range(max_epoch):
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
+            if i == 1:
+                print('__________________________input___________________________')
+                print(feature)
+                print('__________________________prediction___________________________')
+                print(predict)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
         print('AE Dev loss:')
