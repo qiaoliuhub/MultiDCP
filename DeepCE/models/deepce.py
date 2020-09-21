@@ -65,8 +65,8 @@ class DeepCESub(nn.Module):
             
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
-            self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
-            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 8,
+            # self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
+            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 4,
                                                     num_encoder_layers = 6, num_decoder_layers = 6,
                                                     dim_feedforward = self.trans_cell_embed_dim * 4)
             # self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 10**-71, causal = True)
@@ -151,9 +151,8 @@ class DeepCESub(nn.Module):
                 # cell_id_embed = [batch * 50]
                 cell_id_embed = cell_id_embed.unsqueeze(-1)  # Transformer
                 # cell_id_embed = [batch * 50 * 1]
-                
-                cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transforme
-                pdb.set_trace()
+                cell_id_embed = cell_id_embed.repeat(1,1,self.trans_cell_embed_dim)
+                # cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
                 if epoch % 100 == 1:
                     print(cell_id_embed)
@@ -163,8 +162,11 @@ class DeepCESub(nn.Module):
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
-                cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1)
-                cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
+                cell_hidden_ = torch.max(cell_id_embed, -1)
+                # cell_hidden_ = [batch * 50]
+                cell_id_embed = cell_hidden_.unsqueeze(1).repeat(1, self.num_gene, 1)
+                # cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1) ## just to return the hidden representation 
+                # cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
                 # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
         if self.use_pert_idose:
@@ -453,11 +455,14 @@ class DeepCE_AE(DeepCE):
 
                 hidden = hidden.unsqueeze(-1)  # Transformer
                 # hidden = [batch * cell_id_emb_dim * 1]
-                hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
-                # hidden = [batch * cell_id_emb_dim * ]
+                hidden = hidden.repeat(1,1,self.trans_cell_embed_dim)
+                # hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
+                # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
                 hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
-                # hidden = [batch * cell_id_emb_dim * ]
-                cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
+                # hidden = [batch * cell_id_emb_dim * 32]
+                cell_hidden_ = torch.max(cell_id_embed, -1)
+                # cell_hidden_ = [batch * cell_id_emb_dim]
+                # cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
                 # cell_hidden_ = [batch * ]
                 out_2 = self.decoder_2(cell_hidden_)
             
