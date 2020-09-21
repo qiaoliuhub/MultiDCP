@@ -154,7 +154,7 @@ class DeepCESub(nn.Module):
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
-                cell_hidden_ = torch.max(cell_id_embed, -1)
+                cell_hidden_, _ = torch.max(cell_id_embed, -1)
                 # cell_hidden_ = [batch * 50]
                 cell_id_embed = cell_hidden_.unsqueeze(1).repeat(1, self.num_gene, 1)
                 # cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1) ## just to return the hidden representation 
@@ -452,7 +452,7 @@ class DeepCE_AE(DeepCE):
                 # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
                 hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
                 # hidden = [batch * cell_id_emb_dim * 32]
-                cell_hidden_ = torch.max(cell_id_embed, -1)
+                cell_hidden_, _ = torch.max(hidden, -1)
                 # cell_hidden_ = [batch * cell_id_emb_dim]
                 # cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
                 # cell_hidden_ = [batch * ]
