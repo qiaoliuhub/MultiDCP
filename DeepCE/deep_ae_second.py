@@ -167,12 +167,12 @@ for epoch in range(max_epoch):
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss + 0.001 * loss_2
-        loss_t.backward()
+        loss.backward()
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
             print('__________________________input___________________________')
-            print(feature)
+            print(cell_id)
             print('__________________________prediction___________________________')
             print(predict)
             print('__________________________hidden__________________________')

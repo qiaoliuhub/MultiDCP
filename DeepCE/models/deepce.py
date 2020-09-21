@@ -439,7 +439,7 @@ class DeepCE_AE(DeepCE):
             hidden = self.guassian_noise(input_cell_id)
             if linear_only:
                 # input_cell_id = [batch * 978]
-                cell_hidden_ = self.sub_deepce.cell_id_embed_linear_only(input_cell_id)
+                cell_hidden_ = self.sub_deepce.cell_id_embed_linear_only(hidden)
                 # cell_hidden_ = [batch * cell_id_emb_dim(32)]
                 out_2 = self.decoder_linear(cell_hidden_)
             else:
