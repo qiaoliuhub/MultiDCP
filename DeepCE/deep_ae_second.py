@@ -172,7 +172,7 @@ for epoch in range(max_epoch):
         print(loss.item(), loss_2.item())
         if i == 1:
             print('__________________________input___________________________')
-            print(feature)
+            print(cell_id)
             print('__________________________prediction___________________________')
             print(predict)
             print('__________________________hidden__________________________')
