@@ -7,6 +7,24 @@ from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_
 import pdb
 from reformer_pytorch import Reformer
 
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        x = x + self.pe[:x.size(0), :]
+        return self.dropout(x)
+
 class GaussianNoise(nn.Module):
     """Gaussian noise regularizer.
 
@@ -73,7 +91,8 @@ class DeepCESub(nn.Module):
             # self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
             # self.post_re_linear_2 = nn.Linear(32, 978)
             self.expand_to_num_gene = nn.Linear(50, 978)
-            self.linear_dim += cell_id_emb_dim
+            self.pos_encoder = PositionalEncoding(self.trans_cell_embed_dim)
+            self.linear_dim += 50
         if self.use_pert_idose:
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
             self.linear_dim += pert_idose_emb_dim
@@ -149,6 +168,7 @@ class DeepCESub(nn.Module):
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
+                cell_id_embed = self.pos_encoder(cell_id_embed)
                 cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
                 if epoch % 100 == 1:
@@ -450,6 +470,7 @@ class DeepCE_AE(DeepCE):
                 hidden = hidden.repeat(1,1,self.trans_cell_embed_dim)
                 # hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
                 # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
+                hidden = self.sub_deepce.pos_encoder(hidden)
                 hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
                 # hidden = [batch * cell_id_emb_dim * 32]
                 cell_hidden_, _ = torch.max(hidden, -1)

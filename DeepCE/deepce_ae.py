@@ -255,6 +255,8 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
+            print('__________________________input__________________________')
+            print(cell_id)
             print('__________________________hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()
