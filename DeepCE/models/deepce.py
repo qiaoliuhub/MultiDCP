@@ -73,7 +73,7 @@ class DeepCESub(nn.Module):
             # self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
             # self.post_re_linear_2 = nn.Linear(32, 978)
             self.expand_to_num_gene = nn.Linear(50, 978)
-            self.linear_dim += cell_id_emb_dim
+            self.linear_dim += 32
         if self.use_pert_idose:
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
             self.linear_dim += pert_idose_emb_dim
@@ -102,7 +102,7 @@ class DeepCESub(nn.Module):
                 else:
                     self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only=True):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         num_batch = input_drug['molecules'].batch_size
@@ -162,7 +162,7 @@ class DeepCESub(nn.Module):
                 if epoch % 100 == 1:
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
-                cell_hidden_ = torch.max(cell_id_embed, -1)
+                cell_hidden_, _ = torch.max(cell_id_embed, -1)
                 # cell_hidden_ = [batch * 50]
                 cell_id_embed = cell_hidden_.unsqueeze(1).repeat(1, self.num_gene, 1)
                 # cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1) ## just to return the hidden representation 
@@ -241,7 +241,7 @@ class DeepCE(nn.Module):
             #     else:
             #         self.initializer(parameter)
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only = False):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0, linear_only=True):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
         # gene_embed = [num_gene * gene_emb_dim]
         # out = [batch * num_gene * hid_dim]
@@ -422,7 +422,7 @@ class DeepCE_AE(DeepCE):
         self.decoder_linear = nn.Sequential(nn.Linear(cell_id_emb_dim, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = False):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only=True):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
@@ -460,7 +460,7 @@ class DeepCE_AE(DeepCE):
                 # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
                 hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
                 # hidden = [batch * cell_id_emb_dim * 32]
-                cell_hidden_ = torch.max(hidden, -1)
+                cell_hidden_, _ = torch.max(hidden, -1)
                 # cell_hidden_ = [batch * cell_id_emb_dim]
                 # cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
                 # cell_hidden_ = [batch * ]
@@ -485,7 +485,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_'))
+            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_with_noise_'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 10**-7)
