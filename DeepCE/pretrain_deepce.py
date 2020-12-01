@@ -35,6 +35,7 @@ parser.add_argument('--test_file')
 parser.add_argument('--batch_size')
 parser.add_argument('--max_epoch')
 parser.add_argument('--all_cells')
+parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
 
 args = parser.parse_args()
 
@@ -48,6 +49,7 @@ batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
+cell_ge_file = args.cell_ge_file
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}
@@ -77,7 +79,7 @@ else:
 print("Use GPU: %s" % torch.cuda.is_available())
 
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device)
+                             gene_expression_file_test, filter, device, cell_ge_file)
 print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))

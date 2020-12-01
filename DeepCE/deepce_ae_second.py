@@ -19,7 +19,7 @@ from scheduler_lr import step_lr
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE")
+    wandb.init(project="DeepCE_AE_loss")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 

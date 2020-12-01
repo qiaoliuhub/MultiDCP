@@ -50,7 +50,7 @@ class AEDataReader(object):
 
 class DataReader(object):
     def __init__(self, drug_file, gene_file, data_file_train, data_file_dev, data_file_test,
-                 filter, device):
+                 filter, device, cell_ge_file_name):
         self.device = device
         self.drug, self.drug_dim = data_utils.read_drug_string(drug_file)
         self.gene = data_utils.read_gene(gene_file, self.device)
@@ -60,7 +60,7 @@ class DataReader(object):
         self.train_feature, self.dev_feature, self.test_feature, self.train_label, \
         self.dev_label, self.test_label, self.use_pert_type, self.use_cell_id, self.use_pert_idose = \
             data_utils.transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev,
-                                           feature_test, label_test, self.drug, self.device)
+                                           feature_test, label_test, self.drug, self.device, cell_ge_file_name)
 
     def get_batch_data(self, dataset, batch_size, shuffle):
         if dataset == 'train':
