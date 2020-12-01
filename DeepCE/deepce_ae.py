@@ -18,7 +18,7 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
     wandb.init(project="DeepCE_AE_loss")
 else:
@@ -158,7 +158,7 @@ for epoch in range(max_epoch):
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 100 * loss_2
+        loss_t = loss # - 1 * loss_2
         loss_t.backward()
         optimizer.step()
         print(loss.item(), loss_2.item())
@@ -250,11 +250,13 @@ for epoch in range(max_epoch):
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 100 * loss_2
+        loss_t = loss # - 1 * loss_2
         loss_t.backward()
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
+            print('__________________________input__________________________')
+            print(cell_id)
             print('__________________________hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()

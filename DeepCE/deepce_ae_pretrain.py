@@ -150,12 +150,12 @@ for epoch in range(max_epoch):
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature
         predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch, linear_only = True)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(label, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
-        loss_t = loss + 0.001 * loss_2
-        loss.backward()
+        loss_t = loss # + 0.001 * loss_2
+        loss_t.backward()
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
@@ -180,7 +180,7 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch, linear_only = True)
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
@@ -224,7 +224,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
-            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_with_noise_')
+            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_split3')
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
@@ -232,7 +232,7 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', linear_only = True)
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
