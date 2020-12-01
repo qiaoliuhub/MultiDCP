@@ -38,6 +38,7 @@ parser.add_argument('--max_epoch')
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--ae_input_file')
 parser.add_argument('--ae_label_file')
+parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
 
 args = parser.parse_args()
 
@@ -54,6 +55,7 @@ assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 ae_input_file = args.ae_input_file
 ae_label_file = args.ae_label_file
+cell_ge_file = args.cell_ge_file
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}
@@ -85,7 +87,7 @@ print("Use GPU: %s" % torch.cuda.is_available())
 
 ae_data = datareader.AEDataReader(ae_input_file, ae_label_file, device)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device, ae_input_file)
+                             gene_expression_file_test, filter, device, cell_ge_file)
 print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
