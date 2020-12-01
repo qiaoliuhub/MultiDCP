@@ -20,7 +20,7 @@ from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE_AE_loss")
+    wandb.init(project="DeepCE_AE_pretrain")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -85,7 +85,7 @@ print("Use GPU: %s" % torch.cuda.is_available())
 
 ae_data = datareader.AEDataReader(ae_input_file, ae_label_file, device)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device)
+                             gene_expression_file_test, filter, device, ae_input_file)
 print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
@@ -224,7 +224,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
-            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_with_noise_')
+            save(model.sub_deepce.state_dict(), 'best_sub_deepce_storage_with_noise_split1')
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])

@@ -53,6 +53,11 @@ class GaussianNoise(nn.Module):
         return x 
 
 class DeepCESub(nn.Module):
+
+    """
+    submodel of the deepce
+    """
+
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
@@ -221,6 +226,11 @@ class DeepCESub(nn.Module):
                 parameter.requires_grad = False
 
 class DeepCE(nn.Module):
+
+    """
+    The main model deepce
+    """
+
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
@@ -280,6 +290,11 @@ class DeepCE(nn.Module):
 
 class DeepCEOriginal(DeepCE):
 
+
+    """
+    DeepCE + relu + linear to predict the gene expression profile
+    """
+
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
@@ -326,6 +341,11 @@ class DeepCEOriginal(DeepCE):
                 parameter.requires_grad = False
 
 class DeepCEPretraining(DeepCE):
+
+
+    """
+    DeepCE + two task specific linear to predict auc and ic50, which is used as a pretraining model
+    """
 
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
@@ -376,6 +396,10 @@ class DeepCEPretraining(DeepCE):
 
 class DeepCEEhillPretraining(DeepCE):
 
+    """
+    DeepCE + task specific linear to predict ehill (whether dosage specific?)
+    """
+
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
@@ -412,8 +436,11 @@ class DeepCEEhillPretraining(DeepCE):
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
 
-
 class DeepCE_AE(DeepCE):
+
+    """
+    DeepCE + encoder,decoder structure (if job id == 'perturbed", deepce, else, encoder, decoder_only)
+    """
 
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,

@@ -85,7 +85,7 @@ print("Use GPU: %s" % torch.cuda.is_available())
 
 ae_data = datareader.AEDataReader(ae_input_file, ae_label_file, device)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device)
+                             gene_expression_file_test, filter, device, ae_input_file)
 print('#Train: %d' % len(data.train_feature['drug']))
 print('#Dev: %d' % len(data.dev_feature['drug']))
 print('#Test: %d' % len(data.test_feature['drug']))
