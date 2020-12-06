@@ -5,7 +5,6 @@ from drug_gene_attention import DrugGeneAttention
 from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_wise_ranknet, list_wise_rankcosine, \
     list_wise_ndcg, combine_loss, mse_plus_homophily
 import pdb
-from reformer_pytorch import Reformer
 import math
 
 class PositionalEncoding(nn.Module):
@@ -93,9 +92,7 @@ class DeepCESub(nn.Module):
             self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 4,
                                                     num_encoder_layers = 1, num_decoder_layers = 1,
                                                     dim_feedforward = self.trans_cell_embed_dim * 4)
-            # self.cell_id_reformer = Reformer(dim = self.trans_cell_embed_dim, bucket_size = 64, depth = 12, max_seq_len = 4096, heads = 8, lsh_dropout = 10**-71, causal = True)
-            # self.post_re_linear_1 = nn.Linear(cell_id_input_dim, 32)
-            # self.post_re_linear_2 = nn.Linear(32, 978)
+
             self.expand_to_num_gene = nn.Linear(50, 978)
             self.pos_encoder = PositionalEncoding(self.trans_cell_embed_dim)
             self.linear_dim += 50
