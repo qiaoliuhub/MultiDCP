@@ -83,7 +83,7 @@ class DeepCESub(nn.Module):
             #self.cell_id_2 = nn.Linear(100, cell_id_emb_dim)
             self.cell_id_1 = nn.Linear(cell_id_input_dim, 200)
             self.cell_id_2 = nn.Linear(200, 100)
-            self.cell_id_3 = nn.Linear(100, cell_id_emb_dim)
+            self.cell_id_3 = nn.Linear(100, 50)
             self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, self.cell_id_2, self.cell_id_3)
             
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
@@ -190,7 +190,7 @@ class DeepCESub(nn.Module):
                 cell_id_embed = cell_hidden_.unsqueeze(1).repeat(1, self.num_gene, 1)
                 # cell_hidden_ = cell_id_embed.contigous().view(cell_id_embed.size(0), -1) ## just to return the hidden representation 
                 # cell_id_embed = self.expand_to_num_gene(cell_id_embed.transpose(-1,-2)).transpose(-1,-2) # Transformer
-                # cell_id_embed = [batch * num_gene * cell_id_emb_dim]
+                # cell_id_embed = [batch * num_gene * 50]
             drug_gene_embed = torch.cat((drug_gene_embed, cell_id_embed), dim=2) # Transformer
         if self.use_pert_idose:
             pert_idose_embed = self.pert_idose_embed(input_pert_idose)
