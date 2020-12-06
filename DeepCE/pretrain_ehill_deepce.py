@@ -18,7 +18,7 @@ import pickle
 
 USE_wandb = True
 if USE_wandb:
-    wandb.init(project="DeepCE")
+    wandb.init(project="DeepCE_AE_ehill")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -112,8 +112,8 @@ for epoch in range(max_epoch):
     print("Iteration %d:" % (epoch+1))
     model.train()
     epoch_loss_ehill = 0
-    for i, batch in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-        ft, lb = batch
+    for i, (ft, lb, cell_type) in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+
         drug = ft['drug']
         mask = ft['mask']
         if data.use_pert_type:
@@ -129,15 +129,23 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
         optimizer.step()
+        print(loss.item())
+        if i == 1:
+            print('__________________________input__________________________')
+            print(cell_id)
+            print('__________________________hidden__________________________')
+            print(cell_hidden_)
+
         epoch_loss_ehill += loss.item()
     print('Train ehill loss:')
     print(epoch_loss_ehill/(i+1))
-    wandb.log({'Train ehill loss': epoch_loss_ehill/(i+1)}, step = epoch)
+    if USE_wandb:
+        wandb.log({'Train ehill loss': epoch_loss_ehill/(i+1)}, step = epoch)
 
     model.eval()
 
@@ -145,8 +153,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0,])
     predict_np = np.empty([0,])
     with torch.no_grad():
-        for i, batch in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
-            ft, lb = batch
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
             if data.use_pert_type:
@@ -161,7 +168,7 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -169,22 +176,26 @@ for epoch in range(max_epoch):
 
         print('Dev ehill loss:')
         print(epoch_loss_ehill / (i + 1))
-        wandb.log({'Dev ehill loss': epoch_loss_ehill/(i+1)}, step=epoch)
+        if USE_wandb:
+            wandb.log({'Dev ehill loss': epoch_loss_ehill/(i+1)}, step=epoch)
 
         rmse_ehill = metric.rmse(lb_np, predict_np)
         rmse_list_dev_ehill.append(rmse_ehill)
         print('RMSE ehill: %.4f' % rmse_ehill)
-        wandb.log({'Dev ehill RMSE': rmse_ehill}, step=epoch)
+        if USE_wandb:
+            wandb.log({'Dev ehill RMSE': rmse_ehill}, step=epoch)
 
         pearson_ehill, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_ehill_list_dev.append(pearson_ehill)
         print('Pearson_ehill\'s correlation: %.4f' % pearson_ehill)
-        wandb.log({'Dev Pearson_ehill': pearson_ehill}, step = epoch)
+        if USE_wandb:
+            wandb.log({'Dev Pearson_ehill': pearson_ehill}, step = epoch)
 
         spearman_ehill, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_ehill_list_dev.append(spearman_ehill)
         print('Spearman_ehill\'s correlation: %.4f' % spearman_ehill)
-        wandb.log({'Dev Spearman_ehill': spearman_ehill}, step = epoch)
+        if USE_wandb:
+            wandb.log({'Dev Spearman_ehill': spearman_ehill}, step = epoch)
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
@@ -195,8 +206,7 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0, ])
     predict_np = np.empty([0, ])
     with torch.no_grad():
-        for i, batch in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            ft, lb = batch
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
             if data.use_pert_type:
@@ -219,22 +229,26 @@ for epoch in range(max_epoch):
 
         print('Test ehill loss:')
         print(epoch_loss_ehill / (i + 1))
-        wandb.log({'Test ehill Loss': epoch_loss_ehill / (i + 1)}, step = epoch)
+        if USE_wandb:
+            wandb.log({'Test ehill Loss': epoch_loss_ehill / (i + 1)}, step = epoch)
 
         rmse_ehill = metric.rmse(lb_np, predict_np)
         rmse_list_test_ehill.append(rmse_ehill)
         print('RMSE ehill: %.4f' % rmse_ehill)
-        wandb.log({'Test RMSE ehill': rmse_ehill} , step = epoch)
+        if USE_wandb:
+            wandb.log({'Test RMSE ehill': rmse_ehill} , step = epoch)
 
         pearson_ehill, _ = metric.correlation(lb_np, predict_np, 'pearson')
         pearson_ehill_list_test.append(pearson_ehill)
         print('Pearson_ehill\'s correlation: %.4f' % pearson_ehill)
-        wandb.log({'Test Pearson_ehill': pearson_ehill}, step = epoch)
+        if USE_wandb:
+            wandb.log({'Test Pearson_ehill': pearson_ehill}, step = epoch)
         
         spearman_ehill, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_ehill_list_test.append(spearman_ehill)
         print('Spearman_ehill\'s correlation: %.4f' % spearman_ehill)
-        wandb.log({'Test Spearman_ehill': spearman_ehill}, step = epoch)
+        if USE_wandb:
+            wandb.log({'Test Spearman_ehill': spearman_ehill}, step = epoch)
 
 best_dev_epoch = np.argmax(spearman_ehill_list_dev)
 print("Epoch %d got best Pearson's correlation of ehill on dev set: %.4f" % (best_dev_epoch + 1, pearson_ehill_list_dev[best_dev_epoch]))

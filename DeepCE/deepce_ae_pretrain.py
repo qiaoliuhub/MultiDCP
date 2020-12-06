@@ -27,7 +27,7 @@ else:
 start_time = datetime.now()
 
 parser = argparse.ArgumentParser(description='DeepCE PreTraining')
-parser.add_argument('--drug_file')
+parser.add_argument('--drug_file', help='the drug file should have two columns-##name##smiles##')
 parser.add_argument('--gene_file')
 parser.add_argument('--dropout')
 parser.add_argument('--train_file')
