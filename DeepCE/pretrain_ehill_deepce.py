@@ -161,7 +161,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                                      job_id = 'pretraining', epoch=epoch)
+                                      job_id = 'pretraining', epoch=epoch, linear_only = False)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
@@ -200,7 +200,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch = epoch)
+                               job_id='pretraining', epoch = epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -254,7 +254,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch=epoch)
+                               job_id='pretraining', epoch=epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)

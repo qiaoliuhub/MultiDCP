@@ -177,12 +177,14 @@ class DeepCESub(nn.Module):
                 # cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
                 if epoch % 100 == 1:
+                    print('------followings are deepce before transformer ----------')
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
                 cell_id_embed = self.pos_encoder(cell_id_embed)
                 cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
                 if epoch % 100 == 1:
+                    print('------followings are deepce after transformer ----------')
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
                 cell_hidden_, _ = torch.max(cell_id_embed, -1)
@@ -516,6 +518,7 @@ class DeepCE_AE(DeepCE):
             else:
                 hidden = self.sub_deepce.cell_id_embed(hidden)
                 if epoch % 100 == 1:
+                    print('---------------------followings are ae before transformer -------------------------')
                     print(hidden)
                     new_hidden = hidden.clone()
                     new_input_cell_id = input_cell_id.clone()
@@ -537,7 +540,9 @@ class DeepCE_AE(DeepCE):
                 out_2 = self.decoder_2(cell_hidden_)
             
             if epoch % 100 == 1:
+
                 print(input_cell_id)
+                print('---------------------followings are ae after transformer -------------------------')
                 print(out_2)
                 new_out_2 = out_2.clone()
                 torch.save(new_out_2, 'new_out_2.pt')
