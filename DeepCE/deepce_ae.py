@@ -133,8 +133,7 @@ precisionk_list_ae_dev = []
 precisionk_list_ae_test = []
 precisionk_list_perturbed_dev = []
 precisionk_list_perturbed_test = []
-pearson_raw_list_ae = []
-pearson_raw_list_perturbed = []
+
 for epoch in range(max_epoch):
     
     scheduler.step()
