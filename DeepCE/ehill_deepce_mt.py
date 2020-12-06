@@ -224,6 +224,9 @@ for epoch in range(max_epoch):
             save(model.sub_deepce.state_dict(), 'best_mode_ehill_storage_')
             print('==========================Best mode saved =====================')
 
+
+
+
     epoch_loss_ehill = 0
     lb_np = np.empty([0, ])
     predict_np = np.empty([0, ])

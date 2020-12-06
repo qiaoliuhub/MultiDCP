@@ -428,10 +428,12 @@ class DeepCEEhillPretraining(DeepCE):
                                             nn.Linear(num_gene//2, num_gene//2),
                                             nn.ReLU(),
                                             nn.Linear(num_gene//2, 1))
+        self.linear_2 = nn.Linear(hid_dim, 1)
         super().init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
-                input_pert_idose, epoch = 0, linear_only = False):
+                input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = False):
+
         out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
                               input_pert_idose, epoch = epoch, linear_only = linear_only)
         if epoch % 100 == 1:
@@ -439,10 +441,18 @@ class DeepCEEhillPretraining(DeepCE):
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
-        out = self.task_linear(out).squeeze(-1)
-        # out = [batch * num_gene]
-        out = self.genes_linear(out)
-        # out = [batch*1] (ehill)
+        if job_id == 'perturbed':
+            out = self.linear_2(out)
+            # out = [batch * num_gene * 1]
+            out = out.squeeze(2)
+            # out = [batch * num_gene]
+        else:
+            out = self.task_linear(out)
+            # out = [batch * num_gene * 1]
+            out = out.squeeze(2)
+            # out = [batch * num_gene]
+            out = self.genes_linear(out)
+            # out = [batch*1] (ehill)
         if epoch % 100 == 1:
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_

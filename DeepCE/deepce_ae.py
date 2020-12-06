@@ -157,9 +157,9 @@ for epoch in range(max_epoch):
         optimizer.zero_grad()
         #### the auto encoder step doesn't need other input rather than feature
         predict, cell_hidden_ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch, linear_only = True)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
-        loss = model.loss(label, predict, linear_only = True)
+        loss = model.loss(label, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss # - 1 * loss_2
         loss_t.backward()
@@ -187,8 +187,8 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch)
-            loss = model.loss(label, predict, linear_only = True)
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', epoch = epoch, linear_only = True)
+            loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
             if i == 1:
@@ -249,9 +249,9 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
+        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
-        loss = model.loss(lb, predict, linear_only = True)
+        loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss # - 1 * loss_2
         loss_t.backward()
@@ -289,8 +289,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
-            loss = model.loss(lb, predict, linear_only = True)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
+            loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
@@ -334,8 +334,8 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
-                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae')
-            loss = model.loss(label, predict, linear_only = True)
+                        input_cell_id=feature, input_pert_idose=None, job_id = 'ae', linear_only = True)
+            loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
@@ -390,8 +390,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
-            loss = model.loss(lb, predict, linear_only = True)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, linear_only = True)
+            loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
