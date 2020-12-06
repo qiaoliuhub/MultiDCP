@@ -14,3 +14,4 @@ __pycache__/*
 *.pt
 *.pdf
 DeepCE/output/*
+graphs/*

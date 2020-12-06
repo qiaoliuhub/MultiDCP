@@ -128,7 +128,7 @@ def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feat
     :param label_dev:
     :param feature_test:
     :param label_test:
-    :param drug: ??? a drug dictionary which has the drugs vector representaiton
+    :param drug: ??? a drug dictionary mapping drug name into smile strings
     :param device: save on gpu device if necessary
     :return:
     """
