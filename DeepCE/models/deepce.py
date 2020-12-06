@@ -486,7 +486,7 @@ class DeepCE_AE(DeepCE):
         self.linear_2 = nn.Linear(hid_dim, 1)
         self.decoder_1 = nn.Linear(self.trans_cell_embed_dim, 1)
         self.decoder_2 = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
-        self.decoder_linear = nn.Sequential(nn.Linear(cell_id_emb_dim, 200), nn.Linear(200, cell_decoder_dim))
+        self.decoder_linear = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose,
