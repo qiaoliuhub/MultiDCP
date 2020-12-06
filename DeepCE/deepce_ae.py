@@ -113,7 +113,8 @@ if USE_wandb:
 
 # training
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
-scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=[lambda x: step_lr([int(x) for x in unfreeze_steps], x)])
+scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                              lr_lambda=[lambda x: step_lr([int(x) for x in unfreeze_steps], x)])
 best_dev_loss = float("inf")
 best_dev_pearson = float("-inf")
 pearson_list_ae_dev = []

@@ -15,6 +15,7 @@ import metric
 import wandb
 import pdb
 import pickle
+from scheduler_lr import step_lr
 
 USE_wandb = True
 if USE_wandb:
@@ -33,6 +34,7 @@ parser.add_argument('--dev_file')
 parser.add_argument('--test_file')
 parser.add_argument('--batch_size')
 parser.add_argument('--max_epoch')
+parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--all_cells')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
 
@@ -46,6 +48,9 @@ gene_expression_file_dev = args.dev_file
 gene_expression_file_test = args.test_file
 batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
+unfreeze_steps = args.unfreeze_steps.split(',')
+assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
+unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
@@ -100,6 +105,8 @@ if USE_wandb:
 
 # training
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
+scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                              lr_lambda=[lambda x: step_lr([int(x) for x in unfreeze_steps], x)])
 best_dev_loss = float("inf")
 best_dev_pearson_ehill = float("-inf")
 pearson_ehill_list_dev = []
@@ -109,6 +116,18 @@ spearman_ehill_list_test = []
 rmse_list_dev_ehill = []
 rmse_list_test_ehill = []
 for epoch in range(max_epoch):
+
+    scheduler.step()
+    for param_group in optimizer.param_groups:
+        print("============current learning rate is {0!r}".format(param_group['lr']))
+    if str(epoch) in unfreeze_steps:
+        number_layer_to_unfreeze = 3 - unfreeze_steps[::-1].index(
+            str(epoch))  ## find the position of last occurance of number epoch
+        for i in range(3 - number_layer_to_unfreeze, 4):
+            unfreeze_pattern[i] = True
+        model.gradual_unfreezing(unfreeze_pattern)
+
+    print(unfreeze_pattern)
     print("Iteration %d:" % (epoch+1))
     model.train()
     epoch_loss_ehill = 0

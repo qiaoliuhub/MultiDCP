@@ -445,6 +445,7 @@ class DeepCEEhillPretraining(DeepCE):
         for name, parameter in self.named_parameters():
                 parameter.requires_grad = True
 
+
 class DeepCE_AE(DeepCE):
 
     """
