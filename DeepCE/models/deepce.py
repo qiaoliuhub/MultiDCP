@@ -424,20 +424,32 @@ class DeepCEEhillPretraining(DeepCE):
                                             nn.ReLU(), 
                                             nn.Linear(hid_dim//2, hid_dim//2),
                                             nn.ReLU(),
-                                            nn.Linear(hid_dim//2, 1)
-                                            )
+                                            nn.Linear(hid_dim//2, 1))
+
+        self.genes_linear = nn.Sequential(nn.Linear(num_gene, num_gene//2),
+                                            nn.ReLU(),
+                                            nn.Linear(num_gene//2, num_gene//2),
+                                            nn.ReLU(),
+                                            nn.Linear(num_gene//2, 1))
         super().init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose)[0]
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, epoch = 0, linear_only = False):
+        out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                              input_pert_idose, epoch = epoch, linear_only = linear_only)
+        if epoch % 100 == 1:
+            torch.save(input_cell_id, 'input_cell_feature.pt')
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
-        out = torch.sum(out, dim=1).squeeze(1)
-        # out = [batch * 1 * hid_dim] => [batch * hid_dim] 
-        out = self.task_linear(out)
-        # out = [batch * 1] (ehill)
-        return out
+        out = self.task_linear(out).squeeze(-1)
+        # out = [batch * num_gene]
+        out = self.genes_linear(out)
+        # out = [batch*1] (ehill)
+        if epoch % 100 == 1:
+            print(cell_hidden_)
+            torch.save(out, 'predicted_cell_feature.pt')
+        return out, cell_hidden_
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
         assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
@@ -471,11 +483,13 @@ class DeepCE_AE(DeepCE):
         self.decoder_linear = nn.Sequential(nn.Linear(cell_id_emb_dim, 200), nn.Linear(200, cell_decoder_dim))
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only=False):
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose,
+                job_id = 'perturbed', epoch = 0, linear_only=False):
         if job_id == 'perturbed':
             if epoch % 100 == 1:
                 torch.save(input_cell_id, 'input_cell_feature.pt')
-            out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch, linear_only = linear_only)
+            out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                                                input_pert_idose, epoch = epoch, linear_only = linear_only)
             # out = [batch * num_gene * hid_dim]
             out = self.relu(out)
             # out = [batch * num_gene * hid_dim]
