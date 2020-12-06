@@ -7,6 +7,10 @@ def point_wise_mse(label, predict):
     loss = loss_utils.mse(label, predict)
     return loss
 
+def mse_plus_homophily(label, predict, hidden_rep, cell_type):
+
+    loss = point_wise_mse(label, predict) + 0.5 * loss_utils.apply_NodeHomophily(hidden_rep, cell_type)
+    return loss
 
 def classification_cross_entropy(label, predict):
     shape = predict.size()
@@ -63,7 +67,6 @@ def list_wise_listmle(label, predict, device):
 def list_wise_rankcosine(label, predict):
     loss = torch.sum((1.0 - loss_utils.cos(predict, label)) / 0.5)
     return loss
-
 
 def list_wise_ndcg(label, predict):
     approx_nDCG = loss_utils.apply_ApproxNDCG_OP(predict, label)

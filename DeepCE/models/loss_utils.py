@@ -1,7 +1,58 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import pdb
 
+class NodeHomophily(torch.autograd.Function):
+    # The PyTorch OP corresponding to the operation: log{ |sum_k^m{ exp{pred_k} } }
+    @staticmethod
+    def forward(ctx, input, cell_label):
+        """
+        In the forward pass we receive a context object and a Tensor containing the input;
+        we must return a Tensor containing the output, and we can use the context object to cache objects for use in the backward pass.
+        Specifically, ctx is a context object that can be used to stash information for backward computation.
+        You can cache arbitrary objects for use in the backward pass using the ctx.save_for_backward method.
+        :param ctx:
+        :param input: i.e., batch_preds of [batch, ranking_size], each row represents the representation of a cell
+        :param cell_label: the cell id in type long
+        :return: [batch, ranking_size], each row represents the log_cumsum_exp value
+        """
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+        not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).float().to(device)
+        BETA = torch.tensor(0.1).to(device)
+        not_A = (~(torch.eq(cell_label.reshape(-1,1), cell_label.reshape(1,-1)))).float().to(device)
+        T = torch.diag(torch.sum(not_A, axis = 1)).to(device)
+        t_minus_a = (T + not_A).to(device)
+        frobenius_norm = torch.norm(input).to(device)
+        ctx.save_for_backward(input, t_minus_a, BETA)
+        return torch.trace(torch.mm(torch.mm(input.T.float(), t_minus_a), input.float())) + BETA * frobenius_norm
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        """
+        In the backward pass we receive the context object and
+        a Tensor containing the gradient of the loss with respect to the output produced during the forward pass (i.e., forward's output).
+        We can retrieve cached data from the context object, and
+        must compute and return the gradient of the loss with respect to the input to the forward function.
+        Namely, grad_output is the gradient of the loss w.r.t. forward's output. Here we first compute the gradient (denoted as grad_out_wrt_in) of forward's output w.r.t. forward's input.
+        Based on the chain rule, grad_output * grad_out_wrt_in would be the desired output, i.e., the gradient of the loss w.r.t. forward's input
+        :param ctx:
+        :param grad_output:
+        :return:
+        """
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
+        input, t_minus_a, BETA = ctx.saved_tensors
+        # chain rule
+        bk_output = grad_output * (torch.tensor(2.0).to(device) * torch.mm(t_minus_a, input.float()) + BETA * torch.tensor(2.0).to(device) * input.float())
+        return bk_output, None
+
+apply_NodeHomophily = NodeHomophily.apply
 
 class LogCumsumExp(torch.autograd.Function):
     # The PyTorch OP corresponding to the operation: log{ |sum_k^m{ exp{pred_k} } }

@@ -83,6 +83,11 @@ def split_data_by_pert_id(pert_id):
 
 
 def read_data(input_file, filter):
+    """
+    :param input_file: including the time, pertid, perttype, cellid, dosage and the perturbed gene expression file (label)
+    :param filter: help to check whether the pertid is in the research scope, cells in the research scope ...
+    :return: the features, labels and cell type
+    """
     feature = []
     label = []
     data = dict()
@@ -91,7 +96,7 @@ def read_data(input_file, filter):
         f.readline()  # skip header
         for line in f:
             line = line.strip().split(',')
-            assert len(line) == 983 or len(line) == 7 or len(line) == 6, "Wrong format"
+            # assert len(line) == 983 or len(line) == 7 or len(line) == 6, "Wrong format"
             if filter["time"] in line[0] and line[1] not in filter['pert_id'] and line[2] in filter["pert_type"] \
                     and line[3] in filter['cell_id'] and line[4] in filter["pert_idose"]:
                 ft = ','.join(line[1:5])
@@ -109,14 +114,29 @@ def read_data(input_file, filter):
         else:
             lb = choose_mean_example(lb)
             label.append(lb)
-    return np.asarray(feature), np.asarray(label, dtype=np.float64)
+    _, cell_type = np.unique(np.asarray([x[2] for x in feature]), return_inverse=True)
+    return np.asarray(feature), np.asarray(label, dtype=np.float64), cell_type
 
 
 def transfrom_to_tensor(feature_train, label_train, feature_dev, label_dev, feature_test, label_test, drug,
-                        device):
-    file_name = 'ccle_gene_expression_file.csv'
+                        device, file_name):
+
+    """
+    :param feature_train: features like pertid, dosage, cell id, etc. will be used to transfer to tensor over here
+    :param label_train:
+    :param feature_dev:
+    :param label_dev:
+    :param feature_test:
+    :param label_test:
+    :param drug: ??? a drug dictionary mapping drug name into smile strings
+    :param device: save on gpu device if necessary
+    :return:
+    """
+    # file_name = 'ccle_gene_expression_file.csv'
     # file_name = 'ccle_gene_expression_2176.csv'
-    cell_line_expression_feature_csv = pd.read_csv('/workspace/DeepCE/DeepCE/data/' + file_name, index_col = 0)
+    if not file_name.endswith('csv'):
+        file_name += '.csv'
+    cell_line_expression_feature_csv = pd.read_csv(file_name, index_col = 0)
     train_drug_feature = []
     dev_drug_feature = []
     test_drug_feature = []
