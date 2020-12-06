@@ -447,7 +447,6 @@ class DeepCEEhillPretraining(DeepCE):
         out = self.genes_linear(out)
         # out = [batch*1] (ehill)
         if epoch % 100 == 1:
-            print(cell_hidden_)
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_
 

@@ -240,7 +240,7 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
