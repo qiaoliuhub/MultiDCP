@@ -248,7 +248,8 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
+        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                                      epoch = epoch, linear_only = True)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
@@ -288,7 +289,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                               epoch = epoch, linear_only = True)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)

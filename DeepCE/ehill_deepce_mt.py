@@ -76,7 +76,7 @@ cell_id_emb_dim = 32
 pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
-# precision_degree = [10, 20, 50, 100]
+precision_degree = [10, 20, 50, 100]
 loss_type = 'point_wise_mse'  # 'point_wise_mse' # 'list_wise_ndcg'
 intitializer = torch.nn.init.kaiming_uniform_
 filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
@@ -179,7 +179,8 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
+        predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                                      job_id='pretraining', epoch=epoch, linear_only = False)
         # loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
@@ -218,7 +219,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
+            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch=epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -271,7 +273,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
-                                      epoch = epoch, linear_only = False)
+                                      job_id = 'perturbed', epoch = epoch, linear_only = False)
         # loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
@@ -311,7 +313,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='perturbed', epoch = epoch, linear_only = False)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
@@ -370,7 +373,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
+            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch=epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -399,19 +403,107 @@ for epoch in range(max_epoch):
         if USE_wandb:
             wandb.log({'Test Spearman_ehill': spearman_ehill}, step=epoch)
 
-best_dev_epoch = np.argmax(spearman_ehill_list_dev)
+    epoch_loss = 0
+    lb_np = np.empty([0, num_gene])
+    predict_np = np.empty([0, num_gene])
+    with torch.no_grad():
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+            drug = ft['drug']
+            mask = ft['mask']
+            if data.use_pert_type:
+                pert_type = ft['pert_type']
+            else:
+                pert_type = None
+            if data.use_cell_id:
+                cell_id = ft['cell_id']
+            else:
+                cell_id = None
+            if data.use_pert_idose:
+                pert_idose = ft['pert_idose']
+            else:
+                pert_idose = None
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='perturbed', epoch = 0, linear_only=False)
+            loss = model.loss(lb, predict)
+            epoch_loss += loss.item()
+            lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
+            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+        print('Perturbed gene expression profile Test loss:')
+        print(epoch_loss / (i + 1))
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Test Loss': epoch_loss / (i + 1)}, step=epoch)
+        rmse = metric.rmse(lb_np, predict_np)
+        rmse_list_perturbed_test.append(rmse)
+        print('Perturbed gene expression profile RMSE: %.4f' % rmse)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Test RMSE': rmse}, step=epoch)
+        pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
+        pearson_list_perturbed_test.append(pearson)
+        print('Perturbed gene expression profile Pearson\'s correlation: %.4f' % pearson)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Test Pearson': pearson}, step=epoch)
+        spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
+        spearman_list_perturbed_test.append(spearman)
+        print('Perturbed gene expression profile Spearman\'s correlation: %.4f' % spearman)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Test Spearman': spearman}, step=epoch)
+        perturbed_precision_test = []
+        for k in precision_degree:
+            precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
+            print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
+            print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
+            # if USE_wandb:
+            # wandb.log({'Perturbed gene expression profile Test Precision Positive@{0!r}'.format(k): precision_pos}, step=epoch)
+            # if USE_wandb:
+            # wandb.log({'Perturbed gene expression profile Test Precision Negative@{0!r}'.format(k): precision_neg}, step=epoch)
+            perturbed_precision_test.append([precision_pos, precision_neg])
+        precisionk_list_perturbed_test.append(perturbed_precision_test)
+
+best_ehill_dev_epoch = np.argmax(spearman_ehill_list_dev)
 print("Epoch %d got best Pearson's correlation of ehill on dev set: %.4f" % (
-best_dev_epoch + 1, pearson_ehill_list_dev[best_dev_epoch]))
+best_ehill_dev_epoch + 1, pearson_ehill_list_dev[best_ehill_dev_epoch]))
 print("Epoch %d got Spearman's correlation of ehill on dev set: %.4f" % (
-best_dev_epoch + 1, spearman_ehill_list_dev[best_dev_epoch]))
-print("Epoch %d got RMSE of ehill on dev set: %.4f" % (best_dev_epoch + 1, rmse_list_dev_ehill[best_dev_epoch]))
+best_ehill_dev_epoch + 1, spearman_ehill_list_dev[best_ehill_dev_epoch]))
+print("Epoch %d got RMSE of ehill on dev set: %.4f" % (best_ehill_dev_epoch + 1, rmse_list_dev_ehill[best_ehill_dev_epoch]))
 
 print("Epoch %d got Pearson's correlation of ehill on test set w.r.t dev set: %.4f" % (
-best_dev_epoch + 1, pearson_ehill_list_test[best_dev_epoch]))
+best_ehill_dev_epoch + 1, pearson_ehill_list_test[best_ehill_dev_epoch]))
 print("Epoch %d got Spearman's correlation of ehill on test set w.r.t dev set: %.4f" % (
-best_dev_epoch + 1, spearman_ehill_list_test[best_dev_epoch]))
+best_ehill_dev_epoch + 1, spearman_ehill_list_test[best_ehill_dev_epoch]))
 print("Epoch %d got RMSE of ehill on test set w.r.t dev set: %.4f" % (
-best_dev_epoch + 1, rmse_list_test_ehill[best_dev_epoch]))
+best_ehill_dev_epoch + 1, rmse_list_test_ehill[best_ehill_dev_epoch]))
+
+best_ehill_test_epoch = np.argmax(spearman_ehill_list_test)
+print("Epoch %d got best Pearson's correlation of ehill on test set: %.4f" % (best_ehill_test_epoch + 1, pearson_ehill_list_test[best_ehill_test_epoch]))
+print("Epoch %d got Spearman's correlation of ehill on test set: %.4f" % (best_ehill_test_epoch + 1, spearman_ehill_list_test[best_ehill_test_epoch]))
+print("Epoch %d got RMSE of ehill on test set: %.4f" % (best_ehill_test_epoch + 1, rmse_list_test_ehill[best_ehill_test_epoch]))
+
+
+best_dev_epoch = np.argmax(pearson_list_perturbed_dev)
+print("Epoch %d got best Perturbed Pearson's correlation on dev set: %.4f" % (best_dev_epoch + 1, pearson_list_perturbed_dev[best_dev_epoch]))
+print("Epoch %d got Perturbed Spearman's correlation on dev set: %.4f" % (best_dev_epoch + 1, spearman_list_perturbed_dev[best_dev_epoch]))
+print("Epoch %d got Perturbed RMSE on dev set: %.4f" % (best_dev_epoch + 1, rmse_list_perturbed_dev[best_dev_epoch]))
+print("Epoch %d got Perturbed P@100 POS and NEG on dev set: %.4f, %.4f" % (best_dev_epoch + 1,
+                                                                  precisionk_list_perturbed_dev[best_dev_epoch][-1][0],
+                                                                  precisionk_list_perturbed_dev[best_dev_epoch][-1][1]))
+
+print("Epoch %d got Perturbed Pearson's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, pearson_list_perturbed_test[best_dev_epoch]))
+print("Epoch %d got Perturbed Spearman's correlation on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, spearman_list_perturbed_test[best_dev_epoch]))
+print("Epoch %d got Perturbed RMSE on test set w.r.t dev set: %.4f" % (best_dev_epoch + 1, rmse_list_perturbed_test[best_dev_epoch]))
+print("Epoch %d got Perturbed P@100 POS and NEG on test set w.r.t dev set: %.4f, %.4f" % (best_dev_epoch + 1,
+                                                                  precisionk_list_perturbed_test[best_dev_epoch][-1][0],
+                                                                  precisionk_list_perturbed_test[best_dev_epoch][-1][1]))
+
+best_test_epoch = np.argmax(pearson_list_perturbed_test)
+print("Epoch %d got Perturbed best Pearson's correlation on test set: %.4f" % (best_test_epoch + 1, pearson_list_perturbed_test[best_test_epoch]))
+print("Epoch %d got Perturbed Spearman's correlation on test set: %.4f" % (best_test_epoch + 1, spearman_list_perturbed_test[best_test_epoch]))
+print("Epoch %d got Perturbed RMSE on test set: %.4f" % (best_test_epoch + 1, rmse_list_perturbed_test[best_test_epoch]))
+print("Epoch %d got Perturbed P@100 POS and NEG on test set: %.4f, %.4f" % (best_test_epoch + 1,
+                                                                  precisionk_list_perturbed_test[best_test_epoch][-1][0],
+                                                                  precisionk_list_perturbed_test[best_test_epoch][-1][1]))
+
+end_time = datetime.now()
+print(end_time - start_time)
 
 best_test_epoch = np.argmax(spearman_ehill_list_test)
 print("Epoch %d got best Pearson's correlation of ehill on test set: %.4f" % (
