@@ -17,6 +17,7 @@ import wandb
 import pdb
 import pickle
 from scheduler_lr import step_lr
+from loss_utils import apply_NodeHomophily
 
 USE_wandb = True
 if USE_wandb:
@@ -124,12 +125,26 @@ scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                               lr_lambda=[lambda x: step_lr([int(x) for x in unfreeze_steps], x)])
 best_dev_loss = float("inf")
 best_dev_pearson_ehill = float("-inf")
+best_dev_pearson = float("-inf")
+
 pearson_ehill_list_dev = []
 pearson_ehill_list_test = []
+pearson_list_perturbed_dev = []
+pearson_list_perturbed_test = []
+
 spearman_ehill_list_dev = []
 spearman_ehill_list_test = []
+spearman_list_perturbed_dev = []
+spearman_list_perturbed_test = []
+
 rmse_list_dev_ehill = []
 rmse_list_test_ehill = []
+rmse_list_perturbed_dev = []
+rmse_list_perturbed_test = []
+
+precisionk_list_perturbed_dev = []
+precisionk_list_perturbed_test = []
+
 for epoch in range(max_epoch):
 
     scheduler.step()
@@ -234,8 +249,107 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_mode_ehill_storage_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_coupled_')
             print('==========================Best mode saved =====================')
+
+    epoch_loss = 0
+
+    for i, (ft, lb, cell_type) in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+        drug = ft['drug']
+        mask = ft['mask']
+        if data.use_pert_type:
+            pert_type = ft['pert_type']
+        else:
+            pert_type = None
+        if data.use_cell_id:
+            cell_id = ft['cell_id']
+        else:
+            cell_id = None
+        if data.use_pert_idose:
+            pert_idose = ft['pert_idose']
+        else:
+            pert_idose = None
+        optimizer.zero_grad()
+        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                                      epoch = epoch, linear_only = False)
+        # loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
+        loss = model.loss(lb, predict)
+        loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+        loss_t = loss # - 1 * loss_2
+        loss_t.backward()
+        optimizer.step()
+        print(loss.item(), loss_2.item())
+        if i == 1:
+            print('__________________________input__________________________')
+            print(cell_id)
+            print('__________________________hidden__________________________')
+            print(cell_hidden_)
+        epoch_loss += loss.item()
+    print('Perturbed gene expression profile Train loss:')
+    print(epoch_loss/(i+1))
+    if USE_wandb:
+        wandb.log({'Perturbed gene expression profile Train loss': epoch_loss/(i+1)}, step = epoch)
+
+    model.eval()
+
+    epoch_loss = 0
+    lb_np = np.empty([0, num_gene])
+    predict_np = np.empty([0, num_gene])
+    with torch.no_grad():
+        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+            drug = ft['drug']
+            mask = ft['mask']
+            if data.use_pert_type:
+                pert_type = ft['pert_type']
+            else:
+                pert_type = None
+            if data.use_cell_id:
+                cell_id = ft['cell_id']
+            else:
+                cell_id = None
+            if data.use_pert_idose:
+                pert_idose = ft['pert_idose']
+            else:
+                pert_idose = None
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch, linear_only = True)
+            loss = model.loss(lb, predict)
+            epoch_loss += loss.item()
+            lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
+            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+        print('Perturbed gene expression profile Dev loss:')
+        print(epoch_loss / (i + 1))
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Dev loss': epoch_loss/(i+1)}, step=epoch)
+        rmse = metric.rmse(lb_np, predict_np)
+        rmse_list_perturbed_dev.append(rmse)
+        print('Perturbed gene expression profile RMSE: %.4f' % rmse)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Dev RMSE': rmse}, step=epoch)
+        pearson, _ = metric.correlation(lb_np, predict_np, 'pearson')
+        pearson_list_perturbed_dev.append(pearson)
+        print('Perturbed gene expression profile Pearson\'s correlation: %.4f' % pearson)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Dev Pearson': pearson}, step = epoch)
+        spearman, _ = metric.correlation(lb_np, predict_np, 'spearman')
+        spearman_list_perturbed_dev.append(spearman)
+        print('Perturbed gene expression profile Spearman\'s correlation: %.4f' % spearman)
+        if USE_wandb:
+            wandb.log({'Perturbed gene expression profile Dev Spearman': spearman}, step = epoch)
+        perturbed_precision = []
+        for k in precision_degree:
+            precision_neg, precision_pos = metric.precision_k(lb_np, predict_np, k)
+            print("Perturbed gene expression profile Precision@%d Positive: %.4f" % (k, precision_pos))
+            print("Perturbed gene expression profile Precision@%d Negative: %.4f" % (k, precision_neg))
+            # if USE_wandb:
+            # wandb.log({'Perturbed gene expression profile Dev Precision Positive@{0!r}'.format(k): precision_pos}, step = epoch)
+            # if USE_wandb:
+            # wandb.log({'Perturbed gene expression profile Dev Precision Negative@{0!r}'.format(k): precision_neg}, step = epoch)
+            perturbed_precision.append([precision_pos, precision_neg])
+        precisionk_list_perturbed_dev.append(perturbed_precision)
+
+        if best_dev_pearson < pearson:
+            best_dev_pearson = pearson
+
 
     epoch_loss_ehill = 0
     lb_np = np.empty([0, ])
