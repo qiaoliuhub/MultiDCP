@@ -1,3 +1,4 @@
+broad_cpd_id,cpd_smiles
 BRD-K70792160,CCN(CC)CCCCN1c2ccccc2Oc2ccc(Cl)cc12
 BRD-K68552125,CCCCCCCCCCCCCC(=O)O[C@@H]1[C@@H](C)[C@]2(O)[C@@H]3C=C(C)C(=O)[C@@]3(O)CC(CO)=C[C@H]2[C@@H]2C(C)(C)[C@]12OC(C)=O
 BRD-K92301463,CCCCC(C)(C)[C@H](O)\C=C\[C@H]1[C@H](O)CC(=O)[C@@H]1C\C=C/CCCC(O)=O

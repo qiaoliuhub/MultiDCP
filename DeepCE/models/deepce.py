@@ -534,7 +534,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_split3'))
+            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_split1'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 10**-7)
