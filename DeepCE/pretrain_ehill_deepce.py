@@ -29,6 +29,10 @@ parser = argparse.ArgumentParser(description='DeepCE PreTraining')
 parser.add_argument('--drug_file')
 parser.add_argument('--gene_file')
 parser.add_argument('--dropout')
+parser.add_argument('--hill_train_file')
+parser.add_argument('--hill_dev_file')
+parser.add_argument('--hill_test_file')
+
 parser.add_argument('--train_file')
 parser.add_argument('--dev_file')
 parser.add_argument('--test_file')
@@ -43,6 +47,9 @@ args = parser.parse_args()
 drug_file = args.drug_file
 gene_file = args.gene_file
 dropout = float(args.dropout)
+hill_file_train = args.hill_train_file
+hill_file_dev = args.hill_dev_file
+hill_file_test = args.hill_test_file
 gene_expression_file_train = args.train_file
 gene_expression_file_dev = args.dev_file
 gene_expression_file_test = args.test_file
@@ -82,22 +89,27 @@ else:
     device = torch.device("cpu")
 print("Use GPU: %s" % torch.cuda.is_available())
 
+hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_file_dev,
+                             hill_file_test, filter, device, cell_ge_file)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
                              gene_expression_file_test, filter, device, cell_ge_file)
-print('#Train: %d' % len(data.train_feature['drug']))
-print('#Dev: %d' % len(data.dev_feature['drug']))
-print('#Test: %d' % len(data.test_feature['drug']))
+print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
+print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
+print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
+print('#Train perturbed data: %d' % len(hill_data.train_feature['drug']))
+print('#Dev perturbed data: %d' % len(hill_data.dev_feature['drug']))
+print('#Test perturbed data: %d' % len(hill_data.test_feature['drug']))
 
 # model creation
 model = deepce.DeepCEEhillPretraining(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_dim,
-                      conv_size=conv_size, degree=degree, gene_input_dim=np.shape(data.gene)[1],
-                      gene_emb_dim=gene_embed_dim, num_gene=np.shape(data.gene)[0], hid_dim=hid_dim, dropout=dropout,
+                      conv_size=conv_size, degree=degree, gene_input_dim=np.shape(hill_data.gene)[1],
+                      gene_emb_dim=gene_embed_dim, num_gene=np.shape(hill_data.gene)[0], hid_dim=hid_dim, dropout=dropout,
                       loss_type=loss_type, device=device, initializer=intitializer,
                       pert_type_input_dim=len(filter['pert_type']), cell_id_input_dim=978,
                       pert_idose_input_dim=len(filter['pert_idose']), pert_type_emb_dim=pert_type_emb_dim,
                       cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim,
-                      use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
-                      use_pert_idose=data.use_pert_idose)
+                      use_pert_type=hill_data.use_pert_type, use_cell_id=hill_data.use_cell_id,
+                      use_pert_idose=hill_data.use_pert_idose)
 model.to(device)
 model = model.double()
 if USE_wandb:
@@ -131,29 +143,29 @@ for epoch in range(max_epoch):
     print("Iteration %d:" % (epoch+1))
     model.train()
     epoch_loss_ehill = 0
-    for i, (ft, lb, cell_type) in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+    for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
 
         drug = ft['drug']
         mask = ft['mask']
-        if data.use_pert_type:
+        if hill_data.use_pert_type:
             pert_type = ft['pert_type']
         else:
             pert_type = None
-        if data.use_cell_id:
+        if hill_data.use_cell_id:
             cell_id = ft['cell_id']
         else:
             cell_id = None
-        if data.use_pert_idose:
+        if hill_data.use_pert_idose:
             pert_idose = ft['pert_idose']
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
+        predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                                      job_id = 'pretraining', epoch=epoch, linear_only = False)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
         optimizer.step()
-        print(loss.item())
         if i == 1:
             print('__________________________input__________________________')
             print(cell_id)
@@ -172,22 +184,23 @@ for epoch in range(max_epoch):
     lb_np = np.empty([0,])
     predict_np = np.empty([0,])
     with torch.no_grad():
-        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+        for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
-            if data.use_pert_type:
+            if hill_data.use_pert_type:
                 pert_type = ft['pert_type']
             else:
                 pert_type = None
-            if data.use_cell_id:
+            if hill_data.use_cell_id:
                 cell_id = ft['cell_id']
             else:
                 cell_id = None
-            if data.use_pert_idose:
+            if hill_data.use_pert_idose:
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
+            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch = epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -218,29 +231,30 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_mode_ehill_storage_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_')
             print('==========================Best mode saved =====================')
 
     epoch_loss_ehill = 0
     lb_np = np.empty([0, ])
     predict_np = np.empty([0, ])
     with torch.no_grad():
-        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+        for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
             drug = ft['drug']
             mask = ft['mask']
-            if data.use_pert_type:
+            if hill_data.use_pert_type:
                 pert_type = ft['pert_type']
             else:
                 pert_type = None
-            if data.use_cell_id:
+            if hill_data.use_cell_id:
                 cell_id = ft['cell_id']
             else:
                 cell_id = None
-            if data.use_pert_idose:
+            if hill_data.use_pert_idose:
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch=epoch)
+            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch=epoch, linear_only = False)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -262,7 +276,7 @@ for epoch in range(max_epoch):
         print('Pearson_ehill\'s correlation: %.4f' % pearson_ehill)
         if USE_wandb:
             wandb.log({'Test Pearson_ehill': pearson_ehill}, step = epoch)
-        
+
         spearman_ehill, _ = metric.correlation(lb_np, predict_np, 'spearman')
         spearman_ehill_list_test.append(spearman_ehill)
         print('Spearman_ehill\'s correlation: %.4f' % spearman_ehill)
