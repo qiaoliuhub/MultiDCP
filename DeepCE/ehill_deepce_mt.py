@@ -185,7 +185,7 @@ for epoch in range(max_epoch):
         loss = model.loss(lb, predict)
         loss.backward()
         optimizer.step()
-        print(loss.item())
+        # print(loss.item())
         if i == 1:
             print('__________________________input__________________________')
             print(cell_id)
@@ -280,7 +280,7 @@ for epoch in range(max_epoch):
         loss_t = loss # - 1 * loss_2
         loss_t.backward()
         optimizer.step()
-        print(loss.item(), loss_2.item())
+        # print(loss.item(), loss_2.item())
         if i == 1:
             print('__________________________input__________________________')
             print(cell_id)
