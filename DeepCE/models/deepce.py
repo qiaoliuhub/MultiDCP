@@ -459,6 +459,20 @@ class DeepCEEhillPretraining(DeepCE):
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_
 
+    def init_weights(self, pretrained = False):
+        print('Initialized deepce original\'s weight............')
+        super().init_weights()
+        print('used original models, no pretraining')
+        for name, parameter in self.named_parameters():
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 10**-7)
+                else:
+                    self.initializer(parameter)
+        if pretrained:
+            print('used pretrained models')
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
+
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
         assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
         self.sub_deepce.gradual_unfreezing(unfreeze_pattern[:3])
