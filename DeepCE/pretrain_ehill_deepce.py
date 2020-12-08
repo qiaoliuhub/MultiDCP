@@ -161,7 +161,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                                      job_id = 'pretraining', epoch=epoch, linear_only = False)
+                                      job_id = 'pretraining', epoch=epoch, linear_only = True)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
@@ -200,7 +200,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch = epoch, linear_only = False)
+                               job_id='pretraining', epoch = epoch, linear_only = True)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -231,7 +231,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_linear_')
             print('==========================Best model saved =====================')
 
     epoch_loss_ehill = 0
@@ -254,7 +254,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch=epoch, linear_only = False)
+                               job_id='pretraining', epoch=epoch, linear_only = True)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
