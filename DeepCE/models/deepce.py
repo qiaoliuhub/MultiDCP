@@ -478,7 +478,7 @@ class DeepCEEhillPretraining(DeepCE):
                     self.initializer(parameter)
         if pretrained:
             print('used pretrained models')
-            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_linear_'))
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
         assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
