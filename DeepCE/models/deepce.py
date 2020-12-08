@@ -160,7 +160,14 @@ class DeepCESub(nn.Module):
                 # pdb.set_trace()
             if linear_only:
                 # input_cell_id = [batch * 978]
+                if epoch % 100 == 10:
+                    print('------followings are deepce before linear embed ----------')
+                    print(input_cell_id)
+
                 cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
+                if epoch % 100 == 10:
+                    print('------followings are deepce after linear embed ----------')
+                    print(cell_id_embed)
                 # cell_id_embed = [batch * cell_id_emb_dim(32)]
                 cell_id_embed = cell_id_embed.unsqueeze(1)
                 # cell_id_embed = [batch * 1 * cell_id_emb_dim]
