@@ -84,7 +84,9 @@ class DeepCESub(nn.Module):
             self.cell_id_1 = nn.Linear(cell_id_input_dim, 200)
             self.cell_id_2 = nn.Linear(200, 100)
             self.cell_id_3 = nn.Linear(100, 50)
-            self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, self.cell_id_2, self.cell_id_3)
+            self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, nn.ReLU(),
+                                                           self.cell_id_2, nn.ReLU(),
+                                                           self.cell_id_3, nn.ReLU())
             
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
@@ -324,8 +326,10 @@ class DeepCEOriginal(DeepCE):
         self.linear_2 = nn.Linear(hid_dim, 1)
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)[0]
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, epoch = 0, linear_only = False):
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                              input_pert_idose, epoch = epoch)[0]
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
