@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CUDA_VISIBLE_DEVICES=1 python ../DeepCE/ehill_deepce_mt.py --drug_file "../DeepCE/data/drug_smiles_new.csv" \
+CUDA_VISIBLE_DEVICES=6 python ../DeepCE/ehill_deepce_mt.py --drug_file "../DeepCE/data/drug_smiles_new.csv" \
 --gene_file "../DeepCE/data/gene_vector.csv"  --hill_train_file "../DeepCE/data/signature_train_pretraining_ehill_unit.csv" \
 --hill_dev_file "../DeepCE/data/signature_dev_pretraining_ehill_unit.csv" \
 --hill_test_file "../DeepCE/data/signature_test_pretraining_ehill_unit.csv" \
