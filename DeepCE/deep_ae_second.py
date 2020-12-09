@@ -59,6 +59,7 @@ ae_input_file = args.ae_input_file
 ae_label_file = args.ae_label_file
 cell_ge_file = args.cell_ge_file
 linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}

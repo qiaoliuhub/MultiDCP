@@ -58,6 +58,7 @@ assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
 linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}

@@ -64,6 +64,7 @@ assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
 linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
 
@@ -254,8 +255,6 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_coupled_linear')
-            print('==========================Best mode saved =====================')
 
     epoch_loss = 0
 
