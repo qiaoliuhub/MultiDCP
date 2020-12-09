@@ -39,6 +39,8 @@ parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is 
 parser.add_argument('--ae_input_file')
 parser.add_argument('--ae_label_file')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
+                    help = 'whether the cell embedding layer only have linear layers')
 
 args = parser.parse_args()
 
@@ -56,6 +58,8 @@ unfreeze_pattern = [False, False, False, False]
 ae_input_file = args.ae_input_file
 ae_label_file = args.ae_label_file
 cell_ge_file = args.cell_ge_file
+linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}
@@ -164,7 +168,8 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
+        predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                                      epoch = epoch, linear_only = linear_only)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
@@ -206,7 +211,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, epoch = epoch)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                               epoch = epoch, linear_only = linear_only)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
@@ -266,7 +272,8 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose)
+            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
+                               epoch=epoch, linear_only=linear_only)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)

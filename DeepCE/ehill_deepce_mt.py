@@ -43,6 +43,8 @@ parser.add_argument('--max_epoch')
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--all_cells')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
+                    help = 'whether the cell embedding layer only have linear layers')
 
 args = parser.parse_args()
 
@@ -61,6 +63,8 @@ unfreeze_steps = args.unfreeze_steps.split(',')
 assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
+linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
 
@@ -180,7 +184,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                                      job_id='pretraining', epoch=epoch, linear_only = True)
+                                      job_id='pretraining', epoch=epoch, linear_only = linear_only)
         # loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss.backward()
@@ -220,7 +224,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch=epoch, linear_only = True)
+                               job_id='pretraining', epoch=epoch, linear_only = linear_only)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -251,8 +255,6 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_coupled_linear')
-            print('==========================Best mode saved =====================')
 
     epoch_loss = 0
 
@@ -273,7 +275,7 @@ for epoch in range(max_epoch):
             pert_idose = None
         optimizer.zero_grad()
         predict, cell_hidden_ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
-                                      job_id = 'perturbed', epoch = epoch, linear_only = True)
+                                      job_id = 'perturbed', epoch = epoch, linear_only = linear_only)
         # loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
         loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
@@ -314,7 +316,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='perturbed', epoch = epoch, linear_only = True)
+                               job_id='perturbed', epoch = epoch, linear_only = linear_only)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
@@ -374,7 +376,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch=epoch, linear_only = True)
+                               job_id='pretraining', epoch=epoch, linear_only = linear_only)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
@@ -423,7 +425,7 @@ for epoch in range(max_epoch):
             else:
                 pert_idose = None
             predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='perturbed', epoch = 0, linear_only = True)
+                               job_id='perturbed', epoch = 0, linear_only = linear_only)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
