@@ -265,6 +265,7 @@ for epoch in range(max_epoch):
         if best_dev_pearson < pearson:
             best_dev_pearson = pearson
 
+
     epoch_loss = 0
     lb_np = np.empty([0, num_gene])
     predict_np = np.empty([0, num_gene])
