@@ -148,7 +148,12 @@ for epoch in range(max_epoch):
     model.train()
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
+
+        ### add each peace of data to GPU to save the memory usage
         drug = ft['drug'].to(device)
+        for key, value in ft['drug'].items():
+            ft['drug'][key] = ft['drug'][key].to(device)
+
         mask = ft['mask'].to(device)
         cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
@@ -191,7 +196,11 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
 
+            ### add each peace of data to GPU to save the memory usage
             drug = ft['drug'].to(device)
+            for key, value in ft['drug'].items():
+                ft['drug'][key] = ft['drug'][key].to(device)
+
             mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
                 pert_type = ft['pert_type'].to(device)
@@ -246,7 +255,11 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
 
+            ### add each peace of data to GPU to save the memory usage
             drug = ft['drug'].to(device)
+            for key, value in ft['drug'].items():
+                ft['drug'][key] = ft['drug'][key].to(device)
+
             mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
                 pert_type = ft['pert_type'].to(device)
