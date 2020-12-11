@@ -148,7 +148,8 @@ for epoch in range(max_epoch):
     model.train()
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-
+        drug = ft['drug']
+        mask = ft['mask']
         cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
             pert_type = ft['pert_type'].to(device)
