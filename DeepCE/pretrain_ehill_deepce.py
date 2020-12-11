@@ -148,8 +148,8 @@ for epoch in range(max_epoch):
     model.train()
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
-        drug = ft['drug']
-        mask = ft['mask']
+        drug = ft['drug'].to(device)
+        mask = ft['mask'].to(device)
         cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
             pert_type = ft['pert_type'].to(device)
@@ -164,7 +164,7 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+        predict, cell_hidden_ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
                                       job_id = 'pretraining', epoch=epoch, linear_only = linear_only)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
@@ -190,8 +190,8 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
 
-            drug = ft['drug']
-            mask = ft['mask']
+            drug = ft['drug'].to(device)
+            mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
                 pert_type = ft['pert_type'].to(device)
             else:
@@ -204,7 +204,7 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+            predict, _ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
                                job_id='pretraining', epoch = epoch, linear_only = linear_only)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
@@ -245,8 +245,8 @@ for epoch in range(max_epoch):
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
 
-            drug = ft['drug']
-            mask = ft['mask']
+            drug = ft['drug'].to(device)
+            mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
                 pert_type = ft['pert_type'].to(device)
             else:
@@ -259,7 +259,7 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
+            predict, _ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
                                job_id='pretraining', epoch=epoch, linear_only = linear_only)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
