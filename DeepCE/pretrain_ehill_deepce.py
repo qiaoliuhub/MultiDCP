@@ -150,7 +150,7 @@ for epoch in range(max_epoch):
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
 
         ### add each peace of data to GPU to save the memory usage
-        drug = ft['drug'].to(device)
+        
         for key, value in ft['drug'].items():
             ft['drug'][key] = ft['drug'][key].to(device)
 
@@ -196,7 +196,7 @@ for epoch in range(max_epoch):
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
 
             ### add each peace of data to GPU to save the memory usage
-            drug = ft['drug'].to(device)
+            
             for key, value in ft['drug'].items():
                 ft['drug'][key] = ft['drug'][key].to(device)
 
@@ -255,7 +255,7 @@ for epoch in range(max_epoch):
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
 
             ### add each peace of data to GPU to save the memory usage
-            drug = ft['drug'].to(device)
+            
             for key, value in ft['drug'].items():
                 ft['drug'][key] = ft['drug'][key].to(device)
 
