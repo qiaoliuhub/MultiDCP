@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 CUDA_VISIBLE_DEVICES=2 python ../DeepCE/pretrain_ehill_deepce.py --drug_file "../DeepCE/data/drug_smiles_new.csv" \
---gene_file "../DeepCE/data/gene_vector.csv"  --hill_train_file "../DeepCE/data/signature_train_pretraining_ehill.csv" \
---hill_dev_file "../DeepCE/data/signature_dev_pretraining_ehill.csv" \
---hill_test_file "../DeepCE/data/signature_test_pretraining_ehill.csv" \
+--gene_file "../DeepCE/data/gene_vector.csv"  --hill_train_file "../DeepCE/data/signature_train_pretraining_ehill_unit_tri.csv" \
+--hill_dev_file "../DeepCE/data/signature_dev_pretraining_ehill_unit_tri.csv" \
+--hill_test_file "../DeepCE/data/signature_test_pretraining_ehill_unit_tri.csv" \
 --train_file "../DeepCE/data/signature_train_cell_3.csv" \
 --dev_file "../DeepCE/data/signature_dev_cell_3.csv" \
 --test_file "../DeepCE/data/signature_test_cell_3.csv" \
