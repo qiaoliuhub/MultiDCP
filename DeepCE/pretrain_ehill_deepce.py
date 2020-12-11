@@ -94,9 +94,9 @@ else:
 print("Use GPU: %s" % torch.cuda.is_available())
 
 hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_file_dev,
-                             hill_file_test, filter, device, cell_ge_file)
+                             hill_file_test, filter, torch.device("cpu"), cell_ge_file)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device, cell_ge_file)
+                             gene_expression_file_test, filter, torch.device("cpu"), cell_ge_file)
 print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
 print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
 print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
@@ -149,8 +149,9 @@ for epoch in range(max_epoch):
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
 
-        drug = ft['drug']
-        mask = ft['mask']
+        ft = ft.to(device)
+        lb = lb.to(device)
+        cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
             pert_type = ft['pert_type']
         else:
@@ -190,6 +191,8 @@ for epoch in range(max_epoch):
     predict_np = np.empty([0,])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+            ft = ft.to(device)
+            lb = lb.to(device)
             drug = ft['drug']
             mask = ft['mask']
             if hill_data.use_pert_type:
@@ -236,7 +239,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_trans_complete_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_linear_complete_')
             print('==========================Best model saved =====================')
 
     epoch_loss_ehill = 0
@@ -244,6 +247,8 @@ for epoch in range(max_epoch):
     predict_np = np.empty([0, ])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+            ft = ft.to(device)
+            lb = lb.to(device)
             drug = ft['drug']
             mask = ft['mask']
             if hill_data.use_pert_type:
