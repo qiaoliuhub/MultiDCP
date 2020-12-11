@@ -164,6 +164,7 @@ for epoch in range(max_epoch):
         else:
             pert_idose = None
         optimizer.zero_grad()
+        pdb.set_trace()
         predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
                                       job_id = 'pretraining', epoch=epoch, linear_only = linear_only)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
