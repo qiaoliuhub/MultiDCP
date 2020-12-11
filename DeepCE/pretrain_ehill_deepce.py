@@ -149,19 +149,17 @@ for epoch in range(max_epoch):
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
 
-        ft = ft.to(device)
-        lb = lb.to(device)
         cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
-            pert_type = ft['pert_type']
+            pert_type = ft['pert_type'].to(device)
         else:
             pert_type = None
         if hill_data.use_cell_id:
-            cell_id = ft['cell_id']
+            cell_id = ft['cell_id'].to(device)
         else:
             cell_id = None
         if hill_data.use_pert_idose:
-            pert_idose = ft['pert_idose']
+            pert_idose = ft['pert_idose'].to(device)
         else:
             pert_idose = None
         optimizer.zero_grad()
@@ -191,20 +189,19 @@ for epoch in range(max_epoch):
     predict_np = np.empty([0,])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
-            ft = ft.to(device)
-            lb = lb.to(device)
+
             drug = ft['drug']
             mask = ft['mask']
             if hill_data.use_pert_type:
-                pert_type = ft['pert_type']
+                pert_type = ft['pert_type'].to(device)
             else:
                 pert_type = None
             if hill_data.use_cell_id:
-                cell_id = ft['cell_id']
+                cell_id = ft['cell_id'].to(device)
             else:
                 cell_id = None
             if hill_data.use_pert_idose:
-                pert_idose = ft['pert_idose']
+                pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
@@ -247,20 +244,19 @@ for epoch in range(max_epoch):
     predict_np = np.empty([0, ])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            ft = ft.to(device)
-            lb = lb.to(device)
+
             drug = ft['drug']
             mask = ft['mask']
             if hill_data.use_pert_type:
-                pert_type = ft['pert_type']
+                pert_type = ft['pert_type'].to(device)
             else:
                 pert_type = None
             if hill_data.use_cell_id:
-                cell_id = ft['cell_id']
+                cell_id = ft['cell_id'].to(device)
             else:
                 cell_id = None
             if hill_data.use_pert_idose:
-                pert_idose = ft['pert_idose']
+                pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
             predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
