@@ -41,6 +41,8 @@ parser.add_argument('--max_epoch')
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--all_cells')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
+                    help = 'whether the cell embedding layer only have linear layers')
 
 args = parser.parse_args()
 
@@ -59,6 +61,8 @@ unfreeze_steps = args.unfreeze_steps.split(',')
 assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
+linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
 
@@ -90,9 +94,9 @@ else:
 print("Use GPU: %s" % torch.cuda.is_available())
 
 hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_file_dev,
-                             hill_file_test, filter, device, cell_ge_file)
+                             hill_file_test, filter, torch.device("cpu"), cell_ge_file)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, device, cell_ge_file)
+                             gene_expression_file_test, filter, torch.device("cpu"), cell_ge_file)
 print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
 print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
 print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
@@ -145,25 +149,28 @@ for epoch in range(max_epoch):
     epoch_loss_ehill = 0
     for i, (ft, lb, cell_type) in enumerate(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
 
+        ### add each peace of data to GPU to save the memory usage
+
         drug = ft['drug']
-        mask = ft['mask']
+        mask = ft['mask'].to(device)
+        cell_type = cell_type.to(device)
         if hill_data.use_pert_type:
-            pert_type = ft['pert_type']
+            pert_type = ft['pert_type'].to(device)
         else:
             pert_type = None
         if hill_data.use_cell_id:
-            cell_id = ft['cell_id']
+            cell_id = ft['cell_id'].to(device)
         else:
             cell_id = None
         if hill_data.use_pert_idose:
-            pert_idose = ft['pert_idose']
+            pert_idose = ft['pert_idose'].to(device)
         else:
             pert_idose = None
         optimizer.zero_grad()
-        predict, cell_hidden_ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                                      job_id = 'pretraining', epoch=epoch, linear_only = False)
+        predict, cell_hidden_ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
+                                      job_id = 'pretraining', epoch=epoch, linear_only = linear_only)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
-        loss = model.loss(lb, predict)
+        loss = model.loss(lb.to(device), predict)
         loss.backward()
         optimizer.step()
         if i == 1:
@@ -185,23 +192,27 @@ for epoch in range(max_epoch):
     predict_np = np.empty([0,])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='dev', batch_size=batch_size, shuffle=False)):
+
+            ### add each peace of data to GPU to save the memory usage
+
             drug = ft['drug']
-            mask = ft['mask']
+
+            mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
-                pert_type = ft['pert_type']
+                pert_type = ft['pert_type'].to(device)
             else:
                 pert_type = None
             if hill_data.use_cell_id:
-                cell_id = ft['cell_id']
+                cell_id = ft['cell_id'].to(device)
             else:
                 cell_id = None
             if hill_data.use_pert_idose:
-                pert_idose = ft['pert_idose']
+                pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch = epoch, linear_only = False)
-            loss_ehill = model.loss(lb, predict)
+            predict, _ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch = epoch, linear_only = linear_only)
+            loss_ehill = model.loss(lb.to(device), predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy().reshape(-1)), axis=0)
@@ -231,31 +242,34 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_')
-            print('==========================Best mode saved =====================')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_trans_complete_')
+            print('==========================Best model saved =====================')
 
     epoch_loss_ehill = 0
     lb_np = np.empty([0, ])
     predict_np = np.empty([0, ])
     with torch.no_grad():
         for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+
+            ### add each peace of data to GPU to save the memory usage
+
             drug = ft['drug']
-            mask = ft['mask']
+            mask = ft['mask'].to(device)
             if hill_data.use_pert_type:
-                pert_type = ft['pert_type']
+                pert_type = ft['pert_type'].to(device)
             else:
                 pert_type = None
             if hill_data.use_cell_id:
-                cell_id = ft['cell_id']
+                cell_id = ft['cell_id'].to(device)
             else:
                 cell_id = None
             if hill_data.use_pert_idose:
-                pert_idose = ft['pert_idose']
+                pert_idose = ft['pert_idose'].to(device)
             else:
                 pert_idose = None
-            predict, _ = model(drug, hill_data.gene, mask, pert_type, cell_id, pert_idose,
-                               job_id='pretraining', epoch=epoch, linear_only = False)
-            loss_ehill = model.loss(lb, predict)
+            predict, _ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_id, pert_idose,
+                               job_id='pretraining', epoch=epoch, linear_only = linear_only)
+            loss_ehill = model.loss(lb.to(device), predict)
             epoch_loss_ehill += loss_ehill.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy().reshape(-1)), axis=0)

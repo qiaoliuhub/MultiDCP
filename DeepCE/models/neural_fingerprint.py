@@ -58,11 +58,11 @@ class NeuralFingerprint(nn.Module):
             atom_activations = F.softmax(linear(node_repr))
             return atom_activations
 
-        node_repr = drugs['atom']
+        node_repr = drugs['atom'].to(self.device)
         for layer_idx in range(self.num_layers):
             # (#nodes, #output_size)
             atom_activations += fingerprint_update(self.out_layers[layer_idx], node_repr)
-            node_repr = self.conv_layers[layer_idx](drugs['molecules'],  node_repr, drugs['bond'],
+            node_repr = self.conv_layers[layer_idx](drugs['molecules'],  node_repr, drugs['bond'].to(self.device),
                                                     neighbor_by_degree)
         atom_activations += fingerprint_update(self.out_layers[-1],  node_repr)
         for idx, atom_idx in enumerate(batch_idx):

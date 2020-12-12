@@ -49,6 +49,7 @@ class AEDataReader(object):
             yield feature[excerpt], label[excerpt], torch.Tensor([*range(len(feature[excerpt]))]).long()
 
 class DataReader(object):
+
     def __init__(self, drug_file, gene_file, data_file_train, data_file_dev, data_file_test,
                  filter, device, cell_ge_file_name):
         self.device = device

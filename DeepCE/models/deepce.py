@@ -84,7 +84,9 @@ class DeepCESub(nn.Module):
             self.cell_id_1 = nn.Linear(cell_id_input_dim, 200)
             self.cell_id_2 = nn.Linear(200, 100)
             self.cell_id_3 = nn.Linear(100, 50)
-            self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, self.cell_id_2, self.cell_id_3)
+            self.cell_id_embed_linear_only = nn.Sequential(self.cell_id_1, nn.ReLU(),
+                                                           self.cell_id_2, nn.ReLU(),
+                                                           self.cell_id_3, nn.ReLU())
             
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
@@ -160,7 +162,14 @@ class DeepCESub(nn.Module):
                 # pdb.set_trace()
             if linear_only:
                 # input_cell_id = [batch * 978]
+                if epoch % 100 == 10:
+                    print('------followings are deepce before linear embed ----------')
+                    print(input_cell_id)
+
                 cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
+                if epoch % 100 == 10:
+                    print('------followings are deepce after linear embed ----------')
+                    print(cell_id_embed)
                 # cell_id_embed = [batch * cell_id_emb_dim(32)]
                 cell_id_embed = cell_id_embed.unsqueeze(1)
                 # cell_id_embed = [batch * 1 * cell_id_emb_dim]
@@ -317,8 +326,10 @@ class DeepCEOriginal(DeepCE):
         self.linear_2 = nn.Linear(hid_dim, 1)
         self.init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = 0):
-        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch)[0]
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, epoch = 0, linear_only = False):
+        out = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                              input_pert_idose, epoch = epoch)[0]
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
         # out = [batch * num_gene * hid_dim]
@@ -458,6 +469,20 @@ class DeepCEEhillPretraining(DeepCE):
         if epoch % 100 == 1:
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_
+
+    def init_weights(self, pretrained = False):
+        print('Initialized deepce original\'s weight............')
+        super().init_weights()
+        print('used original models, no pretraining')
+        for name, parameter in self.named_parameters():
+            if 'drug_gene_attn' not in name:
+                if parameter.dim() == 1:
+                    nn.init.constant_(parameter, 10**-7)
+                else:
+                    self.initializer(parameter)
+        if pretrained:
+            print('used pretrained models')
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
         assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"

@@ -1,3 +1,9 @@
+
+''''
+probably will never use the deepce original model
+'''
+
+
 import os
 import pandas as pd
 # os.environ["CUDA_VISIBLE_DEVICES"] = "5"
@@ -34,6 +40,8 @@ parser.add_argument('--batch_size')
 parser.add_argument('--max_epoch')
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
+                    help = 'whether the cell embedding layer only have linear layers')
 
 args = parser.parse_args()
 
@@ -50,6 +58,8 @@ print(unfreeze_steps)
 assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 cell_ge_file = args.cell_ge_file
+linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 # parameters initialization
 drug_input_dim = {'atom': 62, 'bond': 6}

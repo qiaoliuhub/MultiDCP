@@ -1,3 +1,7 @@
+'''
+probably will not use it forever
+'''
+
 import os
 import pandas as pd
 # os.environ["CUDA_VISIBLE_DEVICES"] = "5"
@@ -36,6 +40,8 @@ parser.add_argument('--batch_size')
 parser.add_argument('--max_epoch')
 parser.add_argument('--all_cells')
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
+                    help = 'whether the cell embedding layer only have linear layers')
 
 args = parser.parse_args()
 
@@ -47,6 +53,8 @@ gene_expression_file_dev = args.dev_file
 gene_expression_file_test = args.test_file
 batch_size = int(args.batch_size)
 max_epoch = int(args.max_epoch)
+linear_only = args.linear_only
+print('--------------linear: {0!r}--------------'.format(linear_only))
 
 all_cells = list(pickle.load(open(args.all_cells, 'rb')))
 cell_ge_file = args.cell_ge_file
