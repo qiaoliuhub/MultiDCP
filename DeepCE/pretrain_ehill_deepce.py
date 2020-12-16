@@ -242,7 +242,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_linear_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_trans_high_conf_')
             print('==========================Best model saved =====================')
 
     epoch_loss_ehill = 0

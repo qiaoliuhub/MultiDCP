@@ -75,7 +75,7 @@ pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
 precision_degree = [10, 20, 50, 100]
-loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg'
+loss_type = 'combine' #'point_wise_mse' # 'list_wise_ndcg'
 intitializer = torch.nn.init.kaiming_uniform_
 filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
           #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
@@ -110,7 +110,7 @@ model = deepce.DeepCE_AE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_
                       cell_id_emb_dim=cell_id_emb_dim, cell_decoder_dim = cell_decoder_dim, pert_idose_emb_dim=pert_idose_emb_dim,
                       use_pert_type=data.use_pert_type, use_cell_id=data.use_cell_id,
                       use_pert_idose=data.use_pert_idose)
-model.init_weights(pretrained = True)
+model.init_weights(pretrained = False)
 model.to(device)
 model = model.double()
 if USE_wandb:

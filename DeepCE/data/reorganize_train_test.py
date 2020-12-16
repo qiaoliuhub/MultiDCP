@@ -1,3 +1,6 @@
+'''
+stratified split based on split col
+'''
 #! /usr/bin/env python
 
 import pandas as pd
