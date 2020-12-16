@@ -162,13 +162,13 @@ class DeepCESub(nn.Module):
                 # pdb.set_trace()
             if linear_only:
                 # input_cell_id = [batch * 978]
-                if epoch % 100 == 10:
-                    print('------followings are deepce before linear embed ----------')
+                if epoch % 100 == 80:
+                    print('------followings are deepce sub before linear embed ----------')
                     print(input_cell_id)
 
                 cell_id_embed = self.cell_id_embed_linear_only(input_cell_id)
-                if epoch % 100 == 10:
-                    print('------followings are deepce after linear embed ----------')
+                if epoch % 100 == 80:
+                    print('------followings are deepce sub after linear embed ----------')
                     print(cell_id_embed)
                 # cell_id_embed = [batch * cell_id_emb_dim(32)]
                 cell_id_embed = cell_id_embed.unsqueeze(1)
@@ -185,15 +185,15 @@ class DeepCESub(nn.Module):
                 cell_id_embed = cell_id_embed.repeat(1,1,self.trans_cell_embed_dim)
                 # cell_id_embed = self.cell_id_embed_1(cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
-                if epoch % 100 == 10:
-                    print('------followings are deepce before transformer ----------')
+                if epoch % 100 == 80:
+                    print('------followings are deepce sub before transformer ----------')
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
                 cell_id_embed = self.pos_encoder(cell_id_embed)
                 cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
-                if epoch % 100 == 10:
-                    print('------followings are deepce after transformer ----------')
+                if epoch % 100 == 80:
+                    print('------followings are deepce sub after transformer ----------')
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_post.pt')
                 cell_hidden_, _ = torch.max(cell_id_embed, -1)
@@ -449,7 +449,7 @@ class DeepCEEhillPretraining(DeepCE):
 
         out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
                               input_pert_idose, epoch = epoch, linear_only = linear_only)
-        if epoch % 100 == 1:
+        if epoch % 100 == 80:            
             torch.save(input_cell_id, 'input_cell_feature.pt')
         # out = [batch * num_gene * hid_dim]
         out = self.relu(out)
@@ -466,7 +466,7 @@ class DeepCEEhillPretraining(DeepCE):
             # out = [batch * num_gene]
             out = self.genes_linear(out)
             # out = [batch*1] (ehill)
-        if epoch % 100 == 1:
+        if epoch % 100 == 80:            
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_
 
@@ -482,7 +482,7 @@ class DeepCEEhillPretraining(DeepCE):
                     self.initializer(parameter)
         if pretrained:
             print('used pretrained models')
-            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_linear_'))
 
     def gradual_unfreezing(self, unfreeze_pattern=[True, True, True, True]):
         assert len(unfreeze_pattern) == 4, "length of unfreeze_pattern doesn't match model layers number"
@@ -518,7 +518,7 @@ class DeepCE_AE(DeepCE):
     def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose,
                 job_id = 'perturbed', epoch = 0, linear_only=False):
         if job_id == 'perturbed':
-            if epoch % 100 == 1:
+            if epoch % 100 == 80:                
                 torch.save(input_cell_id, 'input_cell_feature.pt')
             out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
                                                 input_pert_idose, epoch = epoch, linear_only = linear_only)
@@ -528,7 +528,7 @@ class DeepCE_AE(DeepCE):
             out = self.linear_2(out)
             # out = [batch * num_gene * 1]
             out = out.squeeze(2)
-            if epoch % 100 == 1:
+            if epoch % 100 == 80:                
                 torch.save(out, 'predicted_cell_feature.pt')
             # out = [batch * num_gene]
             return out, cell_hidden_
@@ -541,8 +541,8 @@ class DeepCE_AE(DeepCE):
                 out_2 = self.decoder_linear(cell_hidden_)
             else:
                 hidden = self.sub_deepce.cell_id_embed(hidden)
-                if epoch % 100 == 10:
-                    print('---------------------followings are ae before transformer -------------------------')
+                if epoch % 100 == 80:
+                    print('---------------------followings are ae before transformer in ae-------------------------')
                     print(hidden)
                     new_hidden = hidden.clone()
                     new_input_cell_id = input_cell_id.clone()
@@ -563,10 +563,9 @@ class DeepCE_AE(DeepCE):
                 # cell_hidden_ = [batch * ]
                 out_2 = self.decoder_2(cell_hidden_)
             
-            if epoch % 100 == 10:
+            if epoch % 100 == 80:
 
-                print(input_cell_id)
-                print('---------------------followings are ae after transformer -------------------------')
+                print('---------------------followings are ae after transformer/linear embed in ae-------------------------')
                 print(out_2)
                 new_out_2 = out_2.clone()
                 torch.save(new_out_2, 'new_out_2.pt')
@@ -584,7 +583,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict(torch.load('best_sub_deepce_storage_split1'))
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 10**-7)

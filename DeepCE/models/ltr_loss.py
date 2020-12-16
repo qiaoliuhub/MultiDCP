@@ -74,9 +74,9 @@ def list_wise_ndcg(label, predict):
     return loss
 
 
-def combine_loss(label, predict):
+def combine_loss(label, predict, device):
     mse_loss = point_wise_mse(label, predict)
-    listmle_loss = list_wise_listnet(label, predict)
+    listmle_loss = list_wise_rankcosine(label, predict)
     loss = mse_loss + listmle_loss
     return loss
 
