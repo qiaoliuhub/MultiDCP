@@ -91,9 +91,11 @@ class DeepCESub(nn.Module):
             self.cell_id_embed = nn.Sequential(nn.Linear(cell_id_input_dim, 200), nn.Linear(200, 50))
             self.trans_cell_embed_dim = 32
             # self.cell_id_embed_1 = nn.Linear(1, self.trans_cell_embed_dim)
-            self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 4,
-                                                    num_encoder_layers = 1, num_decoder_layers = 1,
-                                                    dim_feedforward = self.trans_cell_embed_dim * 4)
+            # self.cell_id_transformer = nn.Transformer(d_model = self.trans_cell_embed_dim, nhead = 4,
+            #                                         num_encoder_layers = 1, num_decoder_layers = 1,
+            #                                         dim_feedforward = self.trans_cell_embed_dim * 4)
+            self.encoder_layer = nn.TransformerEncoderLayer(d_model=self.trans_cell_embed_dim, nhead=4)
+            self.cell_id_transformer = nn.TransformerEncoder(self.encoder_layer, num_layers=2)
 
             self.expand_to_num_gene = nn.Linear(50, 978)
             self.pos_encoder = PositionalEncoding(self.trans_cell_embed_dim)
@@ -190,7 +192,7 @@ class DeepCESub(nn.Module):
                     print(cell_id_embed)
                     torch.save(cell_id_embed, 'cell_id_embed_pre.pt')
                 cell_id_embed = self.pos_encoder(cell_id_embed)
-                cell_id_embed = self.cell_id_transformer(cell_id_embed, cell_id_embed) # Transformer
+                cell_id_embed = self.cell_id_transformer(cell_id_embed) # Transformer
                 # cell_id_embed = [batch * 50 * 32(trans_cell_embed_dim)]
                 if epoch % 100 == 80:
                     print('------followings are deepce sub after transformer ----------')
@@ -556,7 +558,7 @@ class DeepCE_AE(DeepCE):
                 # hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
                 # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
                 hidden = self.sub_deepce.pos_encoder(hidden)
-                hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
+                hidden = self.sub_deepce.cell_id_transformer(hidden)
                 # hidden = [batch * cell_id_emb_dim * 32]
                 cell_hidden_, _ = torch.max(hidden, -1)
                 # cell_hidden_ = [batch * cell_id_emb_dim]
@@ -584,7 +586,7 @@ class DeepCE_AE(DeepCE):
                 else:
                     self.initializer(parameter)
         if pretrained:
-            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_'))
+            self.sub_deepce.load_state_dict(torch.load('best_model_ehill_storage_trans_high_conf_'))
             # if 'attn' not in name:
             #     if parameter.dim() == 1:
             #         nn.init.constant_(parameter, 10**-7)
