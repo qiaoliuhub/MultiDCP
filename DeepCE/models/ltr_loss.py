@@ -77,8 +77,8 @@ def list_wise_ndcg(label, predict):
 def combine_loss(label, predict, device):
     mse_loss = point_wise_mse(label, predict)
     listmle_loss = list_wise_rankcosine(label, predict)
-    loss = mse_loss + listmle_loss
-    return loss
+    loss = mse_loss + 1.0 * listmle_loss
+    return loss, mse_loss, listmle_loss
 
 
 def pearson(x, y):

@@ -81,7 +81,8 @@ num_gene = 978
 # precision_degree = [10, 20, 50, 100]
 loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg'
 intitializer = torch.nn.init.kaiming_uniform_
-filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
+### the drug in pert_id have no smiles information, which should be used to retrieve 2d information
+filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422','BRD-K11533227','BRD-K51490254'], "pert_type": ["trt_cp"],
           #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
           "cell_id": all_cells,
           "pert_idose": ["0.04 um", "0.12 um", "0.37 um", "1.11 um", "3.33 um", "10.0 um"]}
@@ -95,8 +96,8 @@ print("Use GPU: %s" % torch.cuda.is_available())
 
 hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_file_dev,
                              hill_file_test, filter, torch.device("cpu"), cell_ge_file)
-data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
-                             gene_expression_file_test, filter, torch.device("cpu"), cell_ge_file)
+# data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
+#                              gene_expression_file_test, filter, torch.device("cpu"), cell_ge_file)
 print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
 print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
 print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
@@ -242,7 +243,7 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
-            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_trans_high_conf_')
+            save(model.sub_deepce.state_dict(), 'best_model_ehill_storage_trans_high_conf_test_perf')
             print('==========================Best model saved =====================')
 
     epoch_loss_ehill = 0
