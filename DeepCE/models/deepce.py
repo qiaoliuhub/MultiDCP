@@ -422,13 +422,18 @@ class DeepCEEhillPretraining(DeepCE):
     def __init__(self, drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=None, pert_type_input_dim=None,
                  cell_id_input_dim=None, pert_idose_input_dim=None,
-                 pert_type_emb_dim=None, cell_id_emb_dim=None, pert_idose_emb_dim=None, use_pert_type=False,
+                 pert_type_emb_dim=None, cell_id_emb_dim=None, cell_decoder_dim = None, pert_idose_emb_dim=None, use_pert_type=False,
                  use_cell_id=False, use_pert_idose=False):
         super(DeepCEEhillPretraining, self).__init__(drug_input_dim, drug_emb_dim, conv_size, degree, gene_input_dim, gene_emb_dim, num_gene,
                  hid_dim, dropout, loss_type, device, initializer=initializer, pert_type_input_dim=pert_type_input_dim,
                  cell_id_input_dim=cell_id_input_dim, pert_idose_input_dim=pert_idose_input_dim,
                  pert_type_emb_dim=pert_type_emb_dim, cell_id_emb_dim=cell_id_emb_dim, pert_idose_emb_dim=pert_idose_emb_dim, 
                  use_pert_type=use_pert_type, use_cell_id=use_cell_id, use_pert_idose=use_pert_idose)
+        self.guassian_noise = GaussianNoise(device=device)
+        self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
+        self.decoder_2 = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
+        self.decoder_linear = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
+        
         self.relu = nn.ReLU()
         self.task_linear = nn.Sequential(nn.Linear(hid_dim, hid_dim//2), 
                                             nn.ReLU(), 
@@ -444,7 +449,49 @@ class DeepCEEhillPretraining(DeepCE):
         self.linear_2 = nn.Linear(hid_dim, 1)
         super().init_weights()
 
-    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
+    def forward_ae(self, input_drug, input_gene, mask, input_pert_type, input_cell_id, 
+                input_pert_idose, epoch = 0, linear_only = False):
+        hidden = self.guassian_noise(input_cell_id)
+        if linear_only:
+            # input_cell_id = [batch * 978]
+            cell_hidden_ = self.sub_deepce.cell_id_embed_linear_only(hidden)
+            # cell_hidden_ = [batch * cell_id_emb_dim(32)]
+            out_2 = self.decoder_linear(cell_hidden_)
+        else:
+            hidden = self.sub_deepce.cell_id_embed(hidden)
+            if epoch % 100 == 80:
+                print('---------------------followings are ae before transformer in ae-------------------------')
+                print(hidden)
+                new_hidden = hidden.clone()
+                new_input_cell_id = input_cell_id.clone()
+                torch.save(new_hidden, 'new_hidden.pt')
+                torch.save(new_input_cell_id, 'new_input_cell_id.pt')
+
+            hidden = hidden.unsqueeze(-1)  # Transformer
+            # hidden = [batch * cell_id_emb_dim * 1]
+            hidden = hidden.repeat(1,1,self.trans_cell_embed_dim)
+            # hidden = self.sub_deepce.cell_id_embed_1(hidden) # Transformer
+            # hidden = [batch * cell_id_emb_dim * trans_cell_embed_dim(32))]
+            hidden = self.sub_deepce.pos_encoder(hidden)
+            hidden = self.sub_deepce.cell_id_transformer(hidden, hidden)
+            # hidden = [batch * cell_id_emb_dim * 32]
+            cell_hidden_, _ = torch.max(hidden, -1)
+            # cell_hidden_ = [batch * cell_id_emb_dim]
+            # cell_hidden_ = self.decoder_1(hidden).squeeze(-1)
+            # cell_hidden_ = [batch * ]
+            out_2 = self.decoder_2(cell_hidden_)
+        
+        if epoch % 100 == 80:
+
+            print('---------------------followings are ae after transformer/linear embed in ae-------------------------')
+            print(out_2)
+            new_out_2 = out_2.clone()
+            torch.save(new_out_2, 'new_out_2.pt')
+        # out_2 = [batch * cell_decoder_dim]
+        return out_2, cell_hidden_
+        
+
+    def forward_downstream(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
                 input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = False):
 
         out, cell_hidden_ = super().forward(input_drug, input_gene, mask, input_pert_type, input_cell_id,
@@ -469,6 +516,15 @@ class DeepCEEhillPretraining(DeepCE):
         if epoch % 100 == 80:            
             torch.save(out, 'predicted_cell_feature.pt')
         return out, cell_hidden_
+    
+    def forward(self, input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, job_id = 'perturbed', epoch = 0, linear_only = False):
+        if job_id == 'ae':
+            return self.forward_ae(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, epoch = epoch, linear_only = linear_only)
+        else:
+            return self.forward_downstream(input_drug, input_gene, mask, input_pert_type, input_cell_id,
+                input_pert_idose, job_id = job_id, epoch = epoch, linear_only = linear_only)
 
     def init_weights(self, pretrained = False):
         print('Initialized deepce original\'s weight............')

@@ -235,6 +235,7 @@ for epoch in range(max_epoch):
             ae_precision.append([precision_pos, precision_neg])
         precisionk_list_ae_dev.append(ae_precision)
 
+    model.train()
     epoch_loss = 0
 
     for i, (ft, lb, cell_type) in enumerate(data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True)):
