@@ -217,7 +217,7 @@ class DeepCESub(nn.Module):
         # drug_gene_embed = [batch * num_gene * (drug_embed + gene_embed + pert_type_embed + cell_id_embed + pert_idose_embed)]
         # add outer product
         outer_pro = torch.bmm(ori_drug_embed.unsqueeze(2), input_cell_id.unsqueeze(1))
-        drug_gene_embed = torch.cat((drug_gene_embed, outer_pro.view(outer_pro.shape([0], -1).contingous()))
+        drug_gene_embed = torch.cat((drug_gene_embed, outer_pro.view(outer_pro.shape[0], -1).contingous()), dim=2)
         out = self.linear_1(drug_gene_embed)
         # out = [batch * num_gene * hid_dim]
         return out, cell_hidden_
