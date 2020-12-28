@@ -3,7 +3,7 @@ import torch.nn as nn
 from neural_fingerprint import NeuralFingerprint
 from drug_gene_attention import DrugGeneAttention
 from ltr_loss import point_wise_mse, list_wise_listnet, list_wise_listmle, pair_wise_ranknet, list_wise_rankcosine, \
-    list_wise_ndcg, combine_loss, mse_plus_homophily
+    list_wise_ndcg, combine_loss, mse_plus_homophily, class_combine_loss
 import pdb
 import math
 
@@ -286,6 +286,14 @@ class DeepCE(nn.Module):
         # out = [batch * num_gene * hid_dim]
         return self.sub_deepce(input_drug, input_gene, mask, input_pert_type, input_cell_id, input_pert_idose, epoch = epoch, linear_only = linear_only)
 
+    @property
+    def loss_type(self):
+        return self.__loss_type
+    
+    @loss_type.setter
+    def loss_type(self, loss_type):
+        self.__loss_type = loss_type
+
     def loss(self, label, predict):
         if self.loss_type == 'point_wise_mse':
             loss = point_wise_mse(label, predict)
@@ -300,9 +308,10 @@ class DeepCE(nn.Module):
         elif self.loss_type == 'list_wise_ndcg':
             loss = list_wise_ndcg(label, predict)
         elif self.loss_type == 'combine':
-            loss = combine_loss(label, predict, self.device)
+            loss = class_combine_loss(label, predict, self.device)
         else:
             raise ValueError('Unknown loss: %s' % self.loss_type)
+            
         return loss
 
 class DeepCEOriginal(DeepCE):
@@ -509,7 +518,7 @@ class DeepCE_AE(DeepCE):
         self.guassian_noise = GaussianNoise(device=device)
         self.relu = nn.ReLU()
         self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
-        self.linear_2 = nn.Linear(hid_dim, 1)
+        self.linear_2 = nn.Linear(hid_dim, 2)
         self.decoder_1 = nn.Linear(self.trans_cell_embed_dim, 1)
         self.decoder_2 = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.decoder_linear = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
@@ -527,7 +536,7 @@ class DeepCE_AE(DeepCE):
             # out = [batch * num_gene * hid_dim]
             out = self.linear_2(out)
             # out = [batch * num_gene * 1]
-            out = out.squeeze(2)
+            # out = out.squeeze(2)
             if epoch % 100 == 80:                
                 torch.save(out, 'predicted_cell_feature.pt')
             # out = [batch * num_gene]
