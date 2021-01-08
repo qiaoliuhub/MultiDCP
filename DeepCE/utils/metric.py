@@ -23,7 +23,6 @@ def precision_k(label_test, label_predict, k):
         precision_k_pos.append(len(pos_test.intersection(pos_predict)) / k)
     return np.mean(precision_k_neg), np.mean(precision_k_pos)
 
-
 def rmse(label_test, label_predict):
     return np.sqrt(mean_squared_error(label_test, label_predict))
 

@@ -80,6 +80,13 @@ def combine_loss(label, predict, device):
     loss = mse_loss + listmle_loss
     return loss
 
+def class_combine_loss(label, predict, device):
+    cls_label = (label > 1).long()
+    ce_loss = classification_cross_entropy(cls_label, predict)
+    predict_ = predict[:,:,1]
+    rankcosine_loss = list_wise_rankcosine(label, predict_)
+    loss = ce_loss + 0.01 * rankcosine_loss
+    return loss
 
 def pearson(x, y):
     mean_x = torch.mean(x, dim=-1, keepdim=True)

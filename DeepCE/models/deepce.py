@@ -101,7 +101,7 @@ class DeepCESub(nn.Module):
         if self.use_pert_idose:
             self.pert_idose_embed = nn.Linear(pert_idose_input_dim, pert_idose_emb_dim)
             self.linear_dim += pert_idose_emb_dim
-        self.linear_dim += drug_emb_dim * cell_id_input_dim
+        self.linear_dim += (drug_emb_dim + cell_id_input_dim)
         self.linear_1 = nn.Linear(self.linear_dim, hid_dim)
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
@@ -136,7 +136,7 @@ class DeepCESub(nn.Module):
         ori_drug_embed = torch.sum(drug_atom_embed, dim=1)
         # drug_embed = [batch * drug_emb_dim]
         drug_embed = ori_drug_embed.unsqueeze(1)
-        # drug_embed = [batch * 1 *drug_emb_dim]
+        # drug_embed = [batch * 1 * drug_emb_dim]
         drug_embed = drug_embed.repeat(1, self.num_gene, 1)
         # drug_embed = [batch * num_gene * drug_emb_dim]
         gene_embed = self.gene_embed(input_gene)
@@ -215,9 +215,10 @@ class DeepCESub(nn.Module):
         # drug_gene_embed = [batch * num_gene * (drug_embed + gene_embed + pert_type_embed + cell_id_embed + pert_idose_embed)]
         drug_gene_embed = self.relu(drug_gene_embed)
         # drug_gene_embed = [batch * num_gene * (drug_embed + gene_embed + pert_type_embed + cell_id_embed + pert_idose_embed)]
-        # add outer product
-        outer_pro = torch.bmm(ori_drug_embed.unsqueeze(2), input_cell_id.unsqueeze(1))
-        drug_gene_embed = torch.cat((drug_gene_embed, outer_pro.view(outer_pro.shape[0], -1).contingous()), dim=2)
+        # add linear feature
+        linear_fea = torch.cat((ori_drug_embed, input_cell_id), dim = 1)
+        linear_fea = linear_fea.unsqueeze(1).repeat(1, self.num_gene, 1)
+        drug_gene_embed = torch.cat((drug_gene_embed, linear_fea), dim = 2)
         out = self.linear_1(drug_gene_embed)
         # out = [batch * num_gene * hid_dim]
         return out, cell_hidden_
