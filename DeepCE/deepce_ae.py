@@ -38,6 +38,7 @@ parser.add_argument('--max_epoch')
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--ae_input_file')
 parser.add_argument('--ae_label_file')
+parser.add_argument('--predicted_result_for_testset', help = "the file directory to save the predicted test dataframe")
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
 parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
                     help = 'whether the cell embedding layer only have linear layers')
@@ -57,6 +58,7 @@ assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
 ae_input_file = args.ae_input_file
 ae_label_file = args.ae_label_file
+predicted_result_for_testset = args.predicted_result_for_testset
 cell_ge_file = args.cell_ge_file
 linear_only = args.linear_only
 print('--------------linear: {0!r}--------------'.format(linear_only))
@@ -401,6 +403,14 @@ for epoch in range(max_epoch):
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+
+        test_input = pd.read_csv(gene_expression_file_test)
+        genes_cols = test_input.columns[5:]
+        assert test_input.shape[0] == predict_np.shape[0]
+        predict_df = pd.DataFrame(predict_np, index = test_input.index, columns = genes_cols)
+        result_df  = pd.concat([test_input.iloc[:, :5], predict_df])
+        result_df.to_csv(predicted_result_for_testset, index = False)
+
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
         if USE_wandb:
