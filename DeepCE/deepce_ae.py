@@ -18,7 +18,7 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 
-USE_wandb = True
+USE_wandb = False
 if USE_wandb:
     wandb.init(project="DeepCE_AE_loss")
 else:
@@ -406,9 +406,10 @@ for epoch in range(max_epoch):
 
         test_input = pd.read_csv(gene_expression_file_test)
         genes_cols = test_input.columns[5:]
+        pdb.set_trace()
         assert test_input.shape[0] == predict_np.shape[0]
         predict_df = pd.DataFrame(predict_np, index = test_input.index, columns = genes_cols)
-        result_df  = pd.concat([test_input.iloc[:, :5], predict_df])
+        result_df  = pd.concat([test_input.iloc[:, :5], predict_df], axis = 1)
         result_df.to_csv(predicted_result_for_testset, index = False)
 
         print('Perturbed gene expression profile Test loss:')

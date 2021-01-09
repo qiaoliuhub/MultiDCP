@@ -26,7 +26,7 @@ if __name__ == '__main__':
     split_col = args.split_variable
 
     total_data = pd.concat([train_data, test_data, dev_data])
-    total_data.to_csv('signature_total_train_cell.csv')
+    total_data.to_csv('signature_total_train_cell.csv', index = False)
     # split_list = list(set(total_data[split_col]))
     # ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC']
     #split_list = ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC']
