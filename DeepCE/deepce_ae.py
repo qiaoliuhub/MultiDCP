@@ -170,11 +170,11 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(mselose.item(), listcoloss.item())
         if i == 1:
-            print('__________________________input___________________________')
+            print('__________________________ae input___________________________')
             print(feature)
-            print('__________________________prediction___________________________')
+            print('__________________________ae prediction___________________________')
             print(predict)
-            print('__________________________hidden__________________________')
+            print('__________________________ae hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()   
     
@@ -196,9 +196,9 @@ for epoch in range(max_epoch):
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
             if i == 1:
-                print('__________________________input___________________________')
+                print('__________________________ae input___________________________')
                 print(feature)
-                print('__________________________prediction___________________________')
+                print('__________________________ae prediction___________________________')
                 print(predict)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
@@ -263,9 +263,9 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(mselose.item(), listcoloss.item())
         if i == 1:
-            print('__________________________input__________________________')
+            print('__________________________pertubed input__________________________')
             print(cell_id)
-            print('__________________________hidden__________________________')
+            print('__________________________pertubed hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()
     print('Perturbed gene expression profile Train loss:')
