@@ -81,7 +81,7 @@ class DataReader(object):
             index = index.numpy()
         for start_idx in range(0, len(feature['drug']), batch_size):
             if shuffle:
-                excerpt = index[start_idx:start_idx + batch_size]
+                excerpt = index[start_idx: start_idx + batch_size]
             else:
                 excerpt = slice(start_idx, start_idx + batch_size)
             output = dict()

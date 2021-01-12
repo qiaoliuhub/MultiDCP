@@ -18,7 +18,7 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 
-USE_wandb = False
+USE_wandb = True
 if USE_wandb:
     wandb.init(project="DeepCE_AE_loss")
 else:
@@ -77,12 +77,13 @@ pert_idose_emb_dim = 4
 hid_dim = 128
 num_gene = 978
 precision_degree = [10, 20, 50, 100]
-loss_type = 'combine' #'point_wise_mse' # 'list_wise_ndcg'
+loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg' #'combine'
 intitializer = torch.nn.init.kaiming_uniform_
 filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
           #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
           "cell_id": ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC'],
           "pert_idose": ["0.04 um", "0.12 um", "0.37 um", "1.11 um", "3.33 um", "10.0 um"]}
+sorted_test_input = pd.read_csv(gene_expression_file_test).sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])
 
 # check cuda
 if torch.cuda.is_available():
@@ -172,11 +173,11 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
-            print('__________________________input___________________________')
+            print('__________________________ae input___________________________')
             print(feature)
-            print('__________________________prediction___________________________')
+            print('__________________________ae prediction___________________________')
             print(predict)
-            print('__________________________hidden__________________________')
+            print('__________________________ae hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()   
     
@@ -198,9 +199,9 @@ for epoch in range(max_epoch):
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
             if i == 1:
-                print('__________________________input___________________________')
+                print('__________________________ae input___________________________')
                 print(feature)
-                print('__________________________prediction___________________________')
+                print('__________________________ae prediction___________________________')
                 print(predict)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
@@ -265,9 +266,9 @@ for epoch in range(max_epoch):
         optimizer.step()
         print(loss.item(), loss_2.item())
         if i == 1:
-            print('__________________________input__________________________')
+            print('__________________________pertubed input__________________________')
             print(cell_id)
-            print('__________________________hidden__________________________')
+            print('__________________________pertubed hidden__________________________')
             print(cell_hidden_)
         epoch_loss += loss.item()
     print('Perturbed gene expression profile Train loss:')
@@ -404,13 +405,19 @@ for epoch in range(max_epoch):
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
-        test_input = pd.read_csv(gene_expression_file_test)
-        genes_cols = test_input.columns[5:]
-        pdb.set_trace()
-        assert test_input.shape[0] == predict_np.shape[0]
-        predict_df = pd.DataFrame(predict_np, index = test_input.index, columns = genes_cols)
-        result_df  = pd.concat([test_input.iloc[:, :5], predict_df], axis = 1)
-        result_df.to_csv(predicted_result_for_testset, index = False)
+        if (epoch+1)%10 == 3:
+            
+            genes_cols = sorted_test_input.columns[5:]
+            assert sorted_test_input.shape[0] == predict_np.shape[0]
+            predict_df = pd.DataFrame(predict_np, index = sorted_test_input.index, columns = genes_cols)
+            real_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
+            result_df  = pd.concat([sorted_test_input.iloc[:, :5], predict_df], axis = 1)
+            real_df = pd.concat([sorted_test_input.iloc[:,:5], real_df], axis = 1)
+            print("=====================================write out data=====================================")
+            if epoch == 2:
+                result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/second_FAERS.csv', index = False)
+            result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
+            real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
 
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
