@@ -81,10 +81,13 @@ def combine_loss(label, predict, device):
     return loss
 
 def class_combine_loss(label, predict, device):
-    cls_label = (label > 1).long()
+    cls_label = (label > 2.537).long() + (label > -2.535).long()
     ce_loss = classification_cross_entropy(cls_label, predict)
-    predict_ = predict[:,:,1]
-    rankcosine_loss = list_wise_rankcosine(label, predict_)
+    pos_predict_ = predict[:,:,2]
+    rankcosine_loss_pos = list_wise_rankcosine(label, pos_predict_)
+    neg_predict_ = predict[:,:,0]
+    rankcosine_loss_neg = list_wise_rankcosine(-label, neg_predict_)
+    rankcosine_loss = rankcosine_loss_pos + rankcosine_loss_neg
     loss = ce_loss + 0.01 * rankcosine_loss
     return loss
 

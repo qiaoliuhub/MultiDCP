@@ -518,7 +518,7 @@ class DeepCE_AE(DeepCE):
         self.guassian_noise = GaussianNoise(device=device)
         self.relu = nn.ReLU()
         self.trans_cell_embed_dim = self.sub_deepce.trans_cell_embed_dim
-        self.linear_2 = nn.Linear(hid_dim, 2)
+        self.linear_2 = nn.Linear(hid_dim, 3)
         self.decoder_1 = nn.Linear(self.trans_cell_embed_dim, 1)
         self.decoder_2 = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
         self.decoder_linear = nn.Sequential(nn.Linear(50, 200), nn.Linear(200, cell_decoder_dim))
