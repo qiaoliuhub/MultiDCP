@@ -141,9 +141,11 @@ precisionk_list_ae_dev = []
 precisionk_list_ae_test = []
 precisionk_list_perturbed_dev = []
 precisionk_list_perturbed_test = []
+result_df = None
 
 for epoch in range(max_epoch):
-    
+    data_save = False
+
     scheduler.step()
     for param_group in optimizer.param_groups:
         print("============current learning rate is {0!r}".format(param_group['lr']))
@@ -335,6 +337,7 @@ for epoch in range(max_epoch):
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
         if best_dev_pearson < pearson:
+            data_save = True
             best_dev_pearson = pearson
 
     epoch_loss = 0
@@ -405,7 +408,7 @@ for epoch in range(max_epoch):
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
 
-        if (epoch+1)%10 == 3:
+        if data_save:
             
             genes_cols = sorted_test_input.columns[5:]
             assert sorted_test_input.shape[0] == predict_np.shape[0]
@@ -413,11 +416,13 @@ for epoch in range(max_epoch):
             real_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
             result_df  = pd.concat([sorted_test_input.iloc[:, :5], predict_df], axis = 1)
             real_df = pd.concat([sorted_test_input.iloc[:,:5], real_df], axis = 1)
+            
+        if (epoch+1)%10 == 3:
             print("=====================================write out data=====================================")
             if epoch == 2:
-                result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/second_FAERS.csv', index = False)
+                result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/second_SIDER.csv', index = False)
             result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
-            real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
+            # real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
 
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))

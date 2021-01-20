@@ -148,6 +148,7 @@ for epoch in range(max_epoch):
             pert_type = None
         if data.use_cell_id:
             cell_id = ft['cell_id']
+            pdb.set_trace()
         else:
             cell_id = None
         if data.use_pert_idose:
