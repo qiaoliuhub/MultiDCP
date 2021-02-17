@@ -419,7 +419,7 @@ for epoch in range(max_epoch):
             lb_np_ls.append(lb.cpu().numpy()) # = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np_ls.append(predict.cpu().numpy()) # = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
             hidden_np_ls.append(cells_hidden_repr.cpu().numpy()) # = np.concatenate((hidden_np, cells_hidden_repr.cpu().numpy()), axis=0)
-            
+
         lb_np = np.concatenate(lb_np_ls, axis = 0)
         predict_np = np.concatenate(predict_np_ls, axis = 0)
         hidden_np = np.concatenate(hidden_np_ls, axis = 0)
@@ -439,7 +439,7 @@ for epoch in range(max_epoch):
             hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
         result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
         hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
-        # real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
+        ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
 
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
