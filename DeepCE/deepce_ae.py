@@ -402,6 +402,7 @@ for epoch in range(max_epoch):
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+        
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
         if USE_wandb:

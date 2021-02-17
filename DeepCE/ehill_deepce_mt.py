@@ -106,6 +106,7 @@ hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_fi
                                   hill_file_test, filter, device, cell_ge_file)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
                              gene_expression_file_test, filter, device, cell_ge_file)
+sorted_test_input = pd.read_csv(hill_file_test).sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])    
 print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
 print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
 print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
@@ -505,10 +506,10 @@ for epoch in range(max_epoch):
         precisionk_list_ae_test.append(ae_precision_test)
 
     epoch_loss_ehill = 0
-    lb_np = np.empty([0, ])
-    predict_np = np.empty([0, ])
+    lb_np_ls = []
+    predict_np_ls = []
     with torch.no_grad():
-        for i, (ft, lb, _) in enumerate(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+        for i, (ft, lb, _) in enumerate(tqdm(hill_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False))):
             drug = ft['drug']
             mask = ft['mask']
             if hill_data.use_pert_type:
@@ -527,8 +528,29 @@ for epoch in range(max_epoch):
                                job_id='pretraining', epoch=epoch, linear_only = linear_only)
             loss_ehill = model.loss(lb, predict)
             epoch_loss_ehill += loss_ehill.item()
-            lb_np = np.concatenate((lb_np, lb.cpu().numpy().reshape(-1)), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy().reshape(-1)), axis=0)
+            lb_np_ls.append(lb.cpu().numpy().reshape(-1))
+            predict_np_ls.append(predict.cpu().numpy().reshape(-1))
+
+        lb_np = np.concatenate(lb_np_ls, axis = 0)
+        predict_np = np.concatenate(predict_np_ls, axis = 0)
+        # hidden_np = np.concatenate(hidden_np_ls, axis = 0)
+        if data_save:
+            genes_cols = sorted_test_input.columns[5:]
+            assert sorted_test_input.shape[0] == predict_np.shape[0]
+            predict_df = pd.DataFrame(predict_np, index = sorted_test_input.index, columns = genes_cols)
+            # hidden_df = pd.DataFrame(hidden_np, index = sorted_test_input.index, columns = [x for x in range(50)])
+            ground_truth_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
+            result_df  = pd.concat([sorted_test_input.iloc[:, :5], predict_df], axis = 1)
+            ground_truth_df = pd.concat([sorted_test_input.iloc[:,:5], ground_truth_df], axis = 1)
+            # hidden_df = pd.concat([sorted_test_input.iloc[:,:5], hidden_df], axis = 1) 
+                    
+        print("=====================================write out data=====================================")
+        if epoch == 2:
+            result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/second_ehill_results.csv', index = False)
+            # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
+        result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/predicted_ehill_results.csv', index = False)
+        # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
+        ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/test_for_same.csv', index = False)
 
         print('Test ehill loss:')
         print(epoch_loss_ehill / (i + 1))
