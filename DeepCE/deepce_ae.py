@@ -17,6 +17,7 @@ import pdb
 import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
+from tqdm import tqdm
 
 USE_wandb = True
 if USE_wandb:
@@ -39,7 +40,9 @@ parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is 
 parser.add_argument('--ae_input_file')
 parser.add_argument('--ae_label_file')
 parser.add_argument('--predicted_result_for_testset', help = "the file directory to save the predicted test dataframe")
+parser.add_argument('--hidden_repr_result_for_testset', help = "the file directory to save the test data hidden representation dataframe")
 parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
+parser.add_argument('--all_cells')
 parser.add_argument('--linear_only', dest = 'linear_only', action='store_true', default=False,
                     help = 'whether the cell embedding layer only have linear layers')
 
@@ -59,7 +62,9 @@ unfreeze_pattern = [False, False, False, False]
 ae_input_file = args.ae_input_file
 ae_label_file = args.ae_label_file
 predicted_result_for_testset = args.predicted_result_for_testset
+hidden_repr_result_for_testset = args.hidden_repr_result_for_testset
 cell_ge_file = args.cell_ge_file
+all_cells = list(pickle.load(open(args.all_cells, 'rb')))
 linear_only = args.linear_only
 print('--------------linear: {0!r}--------------'.format(linear_only))
 
@@ -79,11 +84,14 @@ num_gene = 978
 precision_degree = [10, 20, 50, 100]
 loss_type = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg' #'combine'
 intitializer = torch.nn.init.kaiming_uniform_
-filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422'], "pert_type": ["trt_cp"],
-          #"cell_id": ['A375', 'HA1E', 'HELA', 'HT29', 'MCF7', 'PC3', 'YAPC'],
-          "cell_id": ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC'],
+filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422','BRD-U01690642','BRD-U08759356','BRD-U25771771', 'BRD-U33728988', 'BRD-U37049823',
+            'BRD-U44618005', 'BRD-U44700465','BRD-U51951544', 'BRD-U66370498','BRD-U68942961', 'BRD-U73238814',
+            'BRD-U82589721','BRD-U86922168','BRD-U97083655'], 
+          "pert_type": ["trt_cp"],
+          "cell_id": all_cells,# ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC'],
           "pert_idose": ["0.04 um", "0.12 um", "0.37 um", "1.11 um", "3.33 um", "10.0 um"]}
 sorted_test_input = pd.read_csv(gene_expression_file_test).sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])
+
 
 # check cuda
 if torch.cuda.is_available():
@@ -336,9 +344,12 @@ for epoch in range(max_epoch):
             perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
-        if best_dev_pearson < pearson:
+        if best_dev_pearson < pearson or epoch == 200:
             data_save = True
             best_dev_pearson = pearson
+
+    if epoch < 200 or not data_save:
+        continue
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
@@ -382,12 +393,12 @@ for epoch in range(max_epoch):
             ae_precision_test.append([precision_pos, precision_neg])
         precisionk_list_ae_test.append(ae_precision_test)
 
-
     epoch_loss = 0
-    lb_np = np.empty([0, num_gene])
-    predict_np = np.empty([0, num_gene])
+    lb_np_ls = []
+    predict_np_ls = []
+    hidden_np_ls = []
     with torch.no_grad():
-        for i, (ft, lb, _) in enumerate(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
+        for i, (ft, lb, _) in enumerate(tqdm(data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False))):
             drug = ft['drug']
             mask = ft['mask']
             if data.use_pert_type:
@@ -402,27 +413,33 @@ for epoch in range(max_epoch):
                 pert_idose = ft['pert_idose']
             else:
                 pert_idose = None
-            predict, _ = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, linear_only = linear_only)
+            predict, cells_hidden_repr = model(drug, data.gene, mask, pert_type, cell_id, pert_idose, linear_only = linear_only)
             loss = model.loss(lb, predict)
             epoch_loss += loss.item()
-            lb_np = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
-            predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
-
-        if data_save:
+            lb_np_ls.append(lb.cpu().numpy()) # = np.concatenate((lb_np, lb.cpu().numpy()), axis=0)
+            predict_np_ls.append(predict.cpu().numpy()) # = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+            hidden_np_ls.append(cells_hidden_repr.cpu().numpy()) # = np.concatenate((hidden_np, cells_hidden_repr.cpu().numpy()), axis=0)
             
+        lb_np = np.concatenate(lb_np_ls, axis = 0)
+        predict_np = np.concatenate(predict_np_ls, axis = 0)
+        hidden_np = np.concatenate(hidden_np_ls, axis = 0)
+        if data_save:
             genes_cols = sorted_test_input.columns[5:]
             assert sorted_test_input.shape[0] == predict_np.shape[0]
             predict_df = pd.DataFrame(predict_np, index = sorted_test_input.index, columns = genes_cols)
-            real_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
+            hidden_df = pd.DataFrame(hidden_np, index = sorted_test_input.index, columns = [x for x in range(50)])
+            ground_truth_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
             result_df  = pd.concat([sorted_test_input.iloc[:, :5], predict_df], axis = 1)
-            real_df = pd.concat([sorted_test_input.iloc[:,:5], real_df], axis = 1)
-            
-        if (epoch+1)%10 == 3:
-            print("=====================================write out data=====================================")
-            if epoch == 2:
-                result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/second_SIDER.csv', index = False)
-            result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
-            # real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
+            ground_truth_df = pd.concat([sorted_test_input.iloc[:,:5], ground_truth_df], axis = 1)
+            hidden_df = pd.concat([sorted_test_input.iloc[:,:5], hidden_df], axis = 1) 
+                    
+        print("=====================================write out data=====================================")
+        if epoch == 2:
+            result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_results.csv', index = False)
+            hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
+        result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
+        hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
+        # real_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
 
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
