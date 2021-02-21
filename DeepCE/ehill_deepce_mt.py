@@ -18,7 +18,7 @@ import pdb
 import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
-import tqdm
+from tqdm import tqdm
 
 USE_wandb = True
 if USE_wandb:
@@ -106,7 +106,10 @@ hill_data = datareader.DataReader(drug_file, gene_file, hill_file_train, hill_fi
                                   hill_file_test, filter, device, cell_ge_file)
 data = datareader.DataReader(drug_file, gene_file, gene_expression_file_train, gene_expression_file_dev,
                              gene_expression_file_test, filter, device, cell_ge_file)
-sorted_test_input = pd.read_csv(hill_file_test).sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])    
+sorted_test_input = pd.read_csv(hill_file_test)
+all_cells = set(all_cells)
+sorted_test_input = sorted_test_input[sorted_test_input['cell_id'].isin(all_cells)]
+sorted_test_input = sorted_test_input.sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])
 print('#Train hill data: %d' % len(hill_data.train_feature['drug']))
 print('#Dev hill data: %d' % len(hill_data.dev_feature['drug']))
 print('#Test hill data: %d' % len(hill_data.test_feature['drug']))
@@ -170,7 +173,7 @@ precisionk_list_perturbed_dev = []
 precisionk_list_perturbed_test = []
 
 for epoch in range(max_epoch):
-
+    data_save = False
     scheduler.step()
     for param_group in optimizer.param_groups:
         print("============current learning rate is {0!r}".format(param_group['lr']))
@@ -269,8 +272,7 @@ for epoch in range(max_epoch):
 
     model.train()
     epoch_loss_ehill = 0
-    for i, (ft, lb, cell_type) in enumerate(tqdm(
-            hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True))):
+    for i, (ft, lb, cell_type) in enumerate(tqdm(hill_data.get_batch_data(dataset='train', batch_size=batch_size, shuffle=True))):
 
         drug = ft['drug']
         mask = ft['mask']
@@ -361,8 +363,10 @@ for epoch in range(max_epoch):
 
         if best_dev_pearson_ehill < pearson_ehill:
             best_dev_pearson_ehill = pearson_ehill
+            data_save = True
 
-
+    if epoch < 7:
+        continue
     # model.train()
     # epoch_loss = 0
 
@@ -550,7 +554,7 @@ for epoch in range(max_epoch):
             # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
         result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/predicted_ehill_results.csv', index = False)
         # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
-        ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/test_for_same.csv', index = False)
+        # ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/test_for_same.csv', index = False)
 
         print('Test ehill loss:')
         print(epoch_loss_ehill / (i + 1))
