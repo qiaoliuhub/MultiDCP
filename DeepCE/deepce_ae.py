@@ -427,19 +427,19 @@ for epoch in range(max_epoch):
             genes_cols = sorted_test_input.columns[5:]
             assert sorted_test_input.shape[0] == predict_np.shape[0]
             predict_df = pd.DataFrame(predict_np, index = sorted_test_input.index, columns = genes_cols)
-            hidden_df = pd.DataFrame(hidden_np, index = sorted_test_input.index, columns = [x for x in range(50)])
+            # hidden_df = pd.DataFrame(hidden_np, index = sorted_test_input.index, columns = [x for x in range(50)])
             ground_truth_df = pd.DataFrame(lb_np, index = sorted_test_input.index, columns = genes_cols)
             result_df  = pd.concat([sorted_test_input.iloc[:, :5], predict_df], axis = 1)
             ground_truth_df = pd.concat([sorted_test_input.iloc[:,:5], ground_truth_df], axis = 1)
-            hidden_df = pd.concat([sorted_test_input.iloc[:,:5], hidden_df], axis = 1) 
+            # hidden_df = pd.concat([sorted_test_input.iloc[:,:5], hidden_df], axis = 1) 
                     
         print("=====================================write out data=====================================")
         if epoch == 2:
             result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_results.csv', index = False)
-            hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
+            # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
         result_df.loc[[x for x in range(len(result_df))],:].to_csv(predicted_result_for_testset, index = False)
-        hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
-        ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
+        # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
+        # ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/side_effect/test_for_same.csv', index = False)
 
         print('Perturbed gene expression profile Test loss:')
         print(epoch_loss / (i + 1))
