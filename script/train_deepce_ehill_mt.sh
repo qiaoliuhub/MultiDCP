@@ -3,7 +3,7 @@
 CUDA_VISIBLE_DEVICES=6 python ../DeepCE/ehill_deepce_mt.py --drug_file "../DeepCE/data/drug_smiles_new.csv" \
 --gene_file "../DeepCE/data/gene_vector.csv"  --hill_train_file "../DeepCE/data/ehill_data/all_cleaned_ehill_data_train.csv" \
 --hill_dev_file "../DeepCE/data/ehill_data/all_cleaned_ehill_data_dev.csv" \
---hill_test_file "../DeepCE/data/ehill_data/all_cleaned_ehill_data_test.csv" \
+--hill_test_file "../DeepCE/data/ehill_data/all_cleaned_ehill_data_test_uniq.csv" \
 --train_file "../DeepCE/data/signature_train_cell_2.csv" \
 --dev_file "../DeepCE/data/signature_dev_cell_2.csv" \
 --test_file "../DeepCE/data/signature_test_cell_2.csv" \
