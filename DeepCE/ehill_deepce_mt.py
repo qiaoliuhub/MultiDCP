@@ -19,9 +19,11 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 USE_wandb = True
-if USE_wandb:
+if USE_wandbs
     wandb.init(project="DeepCE_AE_ehill")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
