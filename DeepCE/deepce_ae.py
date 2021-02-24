@@ -18,6 +18,8 @@ import pickle
 from scheduler_lr import step_lr
 from loss_utils import apply_NodeHomophily
 from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
 
 USE_wandb = True
 if USE_wandb:
@@ -344,11 +346,11 @@ for epoch in range(max_epoch):
             perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
-        if best_dev_pearson < pearson or epoch == 200:
+        if best_dev_pearson < pearson or epoch == 400:
             data_save = True
             best_dev_pearson = pearson
 
-    if epoch < 200 or not data_save:
+    if epoch < 400 or not data_save:
         continue
 
     epoch_loss = 0
