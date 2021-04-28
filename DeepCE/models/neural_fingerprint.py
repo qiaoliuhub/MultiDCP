@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from graph_degree_conv import GraphDegreeConv
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class NeuralFingerprint(nn.Module):
     def __init__(self, node_size, edge_size, conv_layer_sizes, output_size, degree_list, device, batch_normalize=True):

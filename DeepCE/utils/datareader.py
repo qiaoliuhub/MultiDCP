@@ -4,6 +4,8 @@ import torch
 import data_utils
 import pandas as pd
 import pdb
+import warnings
+warnings.filterwarnings("ignore")
 
 seed = 343
 np.random.seed(seed=seed)

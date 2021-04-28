@@ -93,7 +93,7 @@ filter = {"time": "24H", "pert_id": ['BRD-U41416256', 'BRD-U60236422','BRD-U0169
           "cell_id": all_cells,# ['A549', 'MCF7', 'HCC515', 'HEPG2', 'HS578T', 'PC3', 'SKBR3', 'MDAMB231', 'JURKAT', 'A375', 'BT20', 'HELA', 'HT29', 'HA1E', 'YAPC'],
           "pert_idose": ["0.04 um", "0.12 um", "0.37 um", "1.11 um", "3.33 um", "10.0 um"]}
 sorted_test_input = pd.read_csv(gene_expression_file_test).sort_values(['pert_id', 'pert_type', 'cell_id', 'pert_idose'])
-
+test_ae_label_file = pd.read_csv(ae_label_file + '_test.csv', index_col=0)
 
 # check cuda
 if torch.cuda.is_available():
@@ -126,6 +126,7 @@ model = deepce.DeepCE_AE(drug_input_dim=drug_input_dim, drug_emb_dim=drug_embed_
 model.init_weights(pretrained = False)
 model.to(device)
 model = model.double()
+
 if USE_wandb:
      wandb.watch(model, log="all")
 
@@ -183,7 +184,7 @@ for epoch in range(max_epoch):
         loss_t = loss # - 1 * loss_2
         loss_t.backward()
         optimizer.step()
-        print(loss.item(), loss_2.item())
+        # print(loss.item(), loss_2.item())
         if i == 1:
             print('__________________________ae input___________________________')
             print(feature)
@@ -272,11 +273,11 @@ for epoch in range(max_epoch):
                                       epoch = epoch, linear_only = linear_only)
         #loss = approxNDCGLoss(predict, lb, padded_value_indicator=None)
         loss = model.loss(lb, predict)
-        loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
+        # loss_2 = apply_NodeHomophily(cell_hidden_, cell_type)
         loss_t = loss # - 1 * loss_2
         loss_t.backward()
         optimizer.step()
-        print(loss.item(), loss_2.item())
+        # print(loss.item(), loss_2.item())
         if i == 1:
             print('__________________________pertubed input__________________________')
             print(cell_id)
@@ -346,24 +347,33 @@ for epoch in range(max_epoch):
             perturbed_precision.append([precision_pos, precision_neg])
         precisionk_list_perturbed_dev.append(perturbed_precision)
 
-        if best_dev_pearson < pearson or epoch == 400:
+        if best_dev_pearson < pearson or epoch == 400 or epoch == 200 or epoch == 1:
             data_save = True
             best_dev_pearson = pearson
+            torch.save(model.state_dict(), 'best_deepce_ae_model.pt')
 
-    if epoch < 400 or not data_save:
+    if not data_save or (epoch < 400 and epoch != 200 and epoch != 1):
         continue
 
     epoch_loss = 0
     lb_np = np.empty([0, cell_decoder_dim])
     predict_np = np.empty([0, cell_decoder_dim])
+    hidden_np = np.empty([0, 50])
     with torch.no_grad():
         for i, (feature, label, _) in enumerate(ae_data.get_batch_data(dataset='test', batch_size=batch_size, shuffle=False)):
-            predict, _ = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
+            predict, hidden = model(input_drug=None, input_gene=None, mask=None, input_pert_type=None, 
                         input_cell_id=feature, input_pert_idose=None, job_id = 'ae', linear_only = linear_only)
             loss = model.loss(label, predict)
             epoch_loss += loss.item()
             lb_np = np.concatenate((lb_np, label.cpu().numpy()), axis=0)
             predict_np = np.concatenate((predict_np, predict.cpu().numpy()), axis=0)
+            hidden_np = np.concatenate((hidden_np, hidden.cpu().numpy()), axis=0)
+
+        if data_save:
+            hidden_df = pd.DataFrame(hidden_np, index = list(test_ae_label_file.index), columns = [x for x in range(50)])
+            print('++++++++++++++++++++++++++++Write hidden state out++++++++++++++++++++++++++++++++')
+            hidden_df.to_csv(hidden_repr_result_for_testset)
+
         print('AE Test loss:')
         print(epoch_loss / (i + 1))
         if USE_wandb:

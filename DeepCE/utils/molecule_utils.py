@@ -1,5 +1,6 @@
 from rdkit import Chem
-
+import warnings
+warnings.filterwarnings("ignore")
 
 def bool_to_int(array):
     return [1 if cond else 0 for cond in array]

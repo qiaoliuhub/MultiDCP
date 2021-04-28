@@ -1,7 +1,8 @@
 import rdkit
 import molecule_utils
 from collections import Iterable
-
+import warnings
+warnings.filterwarnings("ignore")
 
 degrees = [0, 1, 2, 3, 4, 5]
 
