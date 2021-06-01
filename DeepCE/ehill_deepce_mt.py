@@ -23,7 +23,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 USE_wandb = True
-if USE_wandbs
+if USE_wandb:
     wandb.init(project="DeepCE_AE_ehill")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
@@ -367,8 +367,8 @@ for epoch in range(max_epoch):
             best_dev_pearson_ehill = pearson_ehill
             data_save = True
 
-    if epoch < 7:
-        continue
+    # if epoch < 7:
+    #     continue
     # model.train()
     # epoch_loss = 0
 
@@ -554,7 +554,7 @@ for epoch in range(max_epoch):
         if epoch == 2:
             result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/second_ehill_results.csv', index = False)
             # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv('../DeepCE/data/AMPAD_data/second_AD_dataset_hidden_representation.csv', index = False)
-        result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/predicted_ehill_results.csv', index = False)
+        result_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/AMPAD_data/predicted_ehill_results.csv', index = False)
         # hidden_df.loc[[x for x in range(len(hidden_df))],:].to_csv(hidden_repr_result_for_testset, index = False)
         # ground_truth_df.loc[[x for x in range(len(result_df))],:].to_csv('../DeepCE/data/ehill_data/test_for_same.csv', index = False)
 
