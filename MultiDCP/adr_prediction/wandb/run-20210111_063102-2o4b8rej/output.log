@@ -1,0 +1,5 @@
+Use GPU if it is deep model: True
+[34m[1mwandb[0m: [33mWARNING[0m Adding to old History rows isn't currently supported.  Step 1 < 2; dropping {'ADR loss1': 0.688934862613678, 'micro aucroc1': 0.619205218679024, 'macro aucroc1': 0.500201789414363}.
+[34m[1mwandb[0m: [33mWARNING[0m Adding to old History rows isn't currently supported.  Step 1 < 2; dropping {'ADR loss2': 0.6891913966434758, 'micro aucroc2': 0.6290147105081323, 'macro aucroc2': 0.5011106488526887}.
+[34m[1mwandb[0m: [33mWARNING[0m Adding to old History rows isn't currently supported.  Step 1 < 2; dropping {'ADR loss3': 0.6888584959797743, 'micro aucroc3': 0.6259248872834569, 'macro aucroc3': 0.5035986483760726}.
+[34m[1mwandb[0m: [33mWARNING[0m Adding to old History rows isn't currently supported.  Step 1 < 2; dropping {'ADR loss4': 0.6884785367221367, 'micro aucroc4': 0.6208076866036714, 'macro aucroc4': 0.5009503688530299}.

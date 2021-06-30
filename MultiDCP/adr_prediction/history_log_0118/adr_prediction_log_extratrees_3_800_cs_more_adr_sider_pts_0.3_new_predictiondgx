@@ -1,0 +1,105 @@
+2021-01-19 21:27:09,287 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 21:27:09,287 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 21:27:09,295 ADR_Prediction DEBUG the first split
+2021-01-19 21:27:09,333 ADR_Prediction DEBUG nozero cols is 584
+2021-01-19 21:27:09,333 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:27:51,423 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:28:01,263 ADR_Prediction DEBUG model prediction micro rocauc is 0.7447, macro rocauc is 0.5707
+2021-01-19 21:28:01,263 ADR_Prediction DEBUG model prediction micro prauc is 0.4681, macro prauc is 0.4314
+2021-01-19 21:28:01,264 ADR_Prediction DEBUG the first split
+2021-01-19 21:28:01,301 ADR_Prediction DEBUG nozero cols is 581
+2021-01-19 21:28:01,301 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:28:44,378 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:28:54,629 ADR_Prediction DEBUG model prediction micro rocauc is 0.7543, macro rocauc is 0.6133
+2021-01-19 21:28:54,630 ADR_Prediction DEBUG model prediction micro prauc is 0.4843, macro prauc is 0.4451
+2021-01-19 21:28:54,630 ADR_Prediction DEBUG the first split
+2021-01-19 21:28:54,675 ADR_Prediction DEBUG nozero cols is 576
+2021-01-19 21:28:54,675 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:29:35,670 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:29:44,975 ADR_Prediction DEBUG model prediction micro rocauc is 0.7465, macro rocauc is 0.5614
+2021-01-19 21:29:44,975 ADR_Prediction DEBUG model prediction micro prauc is 0.4185, macro prauc is 0.3861
+2021-01-19 21:29:44,975 ADR_Prediction DEBUG the first split
+2021-01-19 21:29:45,014 ADR_Prediction DEBUG nozero cols is 582
+2021-01-19 21:29:45,015 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 21:30:27,510 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:30:39,742 ADR_Prediction DEBUG model prediction micro rocauc is 0.7704, macro rocauc is 0.6115
+2021-01-19 21:30:39,742 ADR_Prediction DEBUG model prediction micro prauc is 0.4424, macro prauc is 0.4297
+2021-01-19 21:30:39,743 ADR_Prediction DEBUG the first split
+2021-01-19 21:30:39,775 ADR_Prediction DEBUG nozero cols is 581
+2021-01-19 21:30:39,775 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 21:31:22,763 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:31:33,281 ADR_Prediction DEBUG model prediction micro rocauc is 0.7657, macro rocauc is 0.6098
+2021-01-19 21:31:33,281 ADR_Prediction DEBUG model prediction micro prauc is 0.5157, macro prauc is 0.4773
+2021-01-19 21:31:33,282 ADR_Prediction DEBUG model prediction mean micro rocauc is 0.7563, mean macro rocauc is 0.5933
+2021-01-19 21:31:33,282 ADR_Prediction DEBUG model prediction mean micro prauc is 0.4658, mean macro prauc is 0.4339
+2021-01-19 21:31:33,282 wandb.sdk.internal.internal INFO Internal process exited
+2021-01-19 21:39:47,155 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 21:39:47,156 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 21:39:47,166 ADR_Prediction DEBUG the 0 split
+2021-01-19 21:39:47,207 ADR_Prediction DEBUG nozero cols is 584
+2021-01-19 21:39:47,207 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:42:04,783 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:42:21,369 ADR_Prediction DEBUG model prediction micro rocauc is 0.7495, macro rocauc is 0.5764
+2021-01-19 21:42:21,370 ADR_Prediction DEBUG model prediction micro prauc is 0.4706, macro prauc is 0.4320
+2021-01-19 21:42:21,371 ADR_Prediction DEBUG the 1 split
+2021-01-19 21:42:21,429 ADR_Prediction DEBUG nozero cols is 581
+2021-01-19 21:42:21,430 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:45:23,508 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:45:40,245 ADR_Prediction DEBUG model prediction micro rocauc is 0.7567, macro rocauc is 0.6106
+2021-01-19 21:45:40,245 ADR_Prediction DEBUG model prediction micro prauc is 0.4867, macro prauc is 0.4474
+2021-01-19 21:45:40,246 ADR_Prediction DEBUG the 2 split
+2021-01-19 21:45:40,286 ADR_Prediction DEBUG nozero cols is 576
+2021-01-19 21:45:40,286 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 21:48:33,466 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:48:50,466 ADR_Prediction DEBUG model prediction micro rocauc is 0.7537, macro rocauc is 0.5762
+2021-01-19 21:48:50,467 ADR_Prediction DEBUG model prediction micro prauc is 0.4319, macro prauc is 0.3944
+2021-01-19 21:48:50,468 ADR_Prediction DEBUG the 3 split
+2021-01-19 21:48:50,527 ADR_Prediction DEBUG nozero cols is 582
+2021-01-19 21:48:50,527 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 21:51:34,759 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:51:55,439 ADR_Prediction DEBUG model prediction micro rocauc is 0.7715, macro rocauc is 0.6137
+2021-01-19 21:51:55,440 ADR_Prediction DEBUG model prediction micro prauc is 0.4495, macro prauc is 0.4370
+2021-01-19 21:51:55,440 ADR_Prediction DEBUG the 4 split
+2021-01-19 21:51:55,497 ADR_Prediction DEBUG nozero cols is 581
+2021-01-19 21:51:55,497 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 21:54:26,183 ADR_Prediction DEBUG Predict successfully
+2021-01-19 21:54:36,997 ADR_Prediction DEBUG model prediction micro rocauc is 0.7649, macro rocauc is 0.6029
+2021-01-19 21:54:36,997 ADR_Prediction DEBUG model prediction micro prauc is 0.5219, macro prauc is 0.4806
+2021-01-19 21:54:36,998 ADR_Prediction DEBUG model prediction mean micro rocauc is 0.7593, mean macro rocauc is 0.5960
+2021-01-19 21:54:36,998 ADR_Prediction DEBUG model prediction mean micro prauc is 0.4721, mean macro prauc is 0.4383
+2021-01-19 21:54:36,998 wandb.sdk.internal.internal INFO Internal process exited
+2021-01-19 22:29:36,536 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 22:29:36,536 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 22:29:36,544 ADR_Prediction DEBUG the 0 split
+2021-01-19 22:29:36,624 ADR_Prediction DEBUG nozero cols is 983
+2021-01-19 22:29:36,624 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 22:33:57,704 ADR_Prediction DEBUG Predict successfully
+2021-01-19 22:34:34,030 ADR_Prediction DEBUG model prediction micro rocauc is 0.7956, macro rocauc is 0.5775
+2021-01-19 22:34:34,030 ADR_Prediction DEBUG model prediction micro prauc is 0.4361, macro prauc is 0.4029
+2021-01-19 22:34:34,031 ADR_Prediction DEBUG the 1 split
+2021-01-19 22:34:34,144 ADR_Prediction DEBUG nozero cols is 978
+2021-01-19 22:34:34,144 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 22:38:08,521 ADR_Prediction DEBUG Predict successfully
+2021-01-19 22:38:43,326 ADR_Prediction DEBUG model prediction micro rocauc is 0.7958, macro rocauc is 0.6043
+2021-01-19 22:38:43,326 ADR_Prediction DEBUG model prediction micro prauc is 0.4431, macro prauc is 0.4081
+2021-01-19 22:38:43,327 ADR_Prediction DEBUG the 2 split
+2021-01-19 22:38:43,412 ADR_Prediction DEBUG nozero cols is 922
+2021-01-19 22:38:43,412 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 22:42:07,184 ADR_Prediction DEBUG Predict successfully
+2021-01-19 22:42:51,541 ADR_Prediction DEBUG model prediction micro rocauc is 0.7862, macro rocauc is 0.5762
+2021-01-19 22:42:51,544 ADR_Prediction DEBUG model prediction micro prauc is 0.3974, macro prauc is 0.3676
+2021-01-19 22:42:51,545 ADR_Prediction DEBUG the 3 split
+2021-01-19 22:42:51,664 ADR_Prediction DEBUG nozero cols is 961
+2021-01-19 22:42:51,671 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 22:47:35,797 ADR_Prediction DEBUG Predict successfully
+2021-01-19 22:48:24,477 ADR_Prediction DEBUG model prediction micro rocauc is 0.8076, macro rocauc is 0.6120
+2021-01-19 22:48:24,478 ADR_Prediction DEBUG model prediction micro prauc is 0.4186, macro prauc is 0.4122
+2021-01-19 22:48:24,478 ADR_Prediction DEBUG the 4 split
+2021-01-19 22:48:24,574 ADR_Prediction DEBUG nozero cols is 969
+2021-01-19 22:48:24,574 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 22:51:52,655 ADR_Prediction DEBUG Predict successfully
+2021-01-19 22:52:28,775 ADR_Prediction DEBUG model prediction micro rocauc is 0.8000, macro rocauc is 0.6080
+2021-01-19 22:52:28,776 ADR_Prediction DEBUG model prediction micro prauc is 0.4864, macro prauc is 0.4473
+2021-01-19 22:52:28,777 ADR_Prediction DEBUG model prediction mean micro rocauc is 0.7971, mean macro rocauc is 0.5956
+2021-01-19 22:52:28,777 ADR_Prediction DEBUG model prediction mean micro prauc is 0.4363, mean macro prauc is 0.4076
+2021-01-19 22:52:28,777 wandb.sdk.internal.internal INFO Internal process exited

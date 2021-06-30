@@ -1,0 +1,21 @@
+2021-01-10 17:02:41,339 ADR_Prediction DEBUG the first split
+2021-01-10 17:02:42,229 root DEBUG nozero cols is 1285
+2021-01-10 18:07:20,623 ADR_Prediction DEBUG Predict successfully
+2021-01-10 18:07:58,384 ADR_Prediction DEBUG model prediction micro accuracy is 0.7690, macro accuracy is 0.5220
+2021-01-10 18:07:58,385 ADR_Prediction DEBUG the first split
+2021-01-10 18:08:00,141 root DEBUG nozero cols is 1381
+2021-01-10 19:22:52,291 ADR_Prediction DEBUG Predict successfully
+2021-01-10 19:23:29,450 ADR_Prediction DEBUG model prediction micro accuracy is 0.7519, macro accuracy is 0.5088
+2021-01-10 19:23:29,451 ADR_Prediction DEBUG the first split
+2021-01-10 19:23:29,931 root DEBUG nozero cols is 1338
+2021-01-10 20:19:09,147 ADR_Prediction DEBUG Predict successfully
+2021-01-10 20:19:40,465 ADR_Prediction DEBUG model prediction micro accuracy is 0.7566, macro accuracy is 0.4887
+2021-01-10 20:19:40,468 ADR_Prediction DEBUG the first split
+2021-01-10 20:19:40,936 root DEBUG nozero cols is 1311
+2021-01-10 20:58:15,469 ADR_Prediction DEBUG Predict successfully
+2021-01-10 20:58:39,760 ADR_Prediction DEBUG model prediction micro accuracy is 0.7584, macro accuracy is 0.5329
+2021-01-10 20:58:39,761 ADR_Prediction DEBUG the first split
+2021-01-10 20:58:40,105 root DEBUG nozero cols is 1291
+2021-01-10 21:32:11,440 ADR_Prediction DEBUG Predict successfully
+2021-01-10 21:33:10,206 ADR_Prediction DEBUG model prediction micro accuracy is 0.7590, macro accuracy is 0.5391
+2021-01-10 21:33:10,220 ADR_Prediction DEBUG model prediction mean micro accuracy is 0.7590, mean macro accuracy is 0.5183

@@ -13,6 +13,6 @@ __pycache__/*
 *.html
 *.pt
 *.pdf
-DeepCE/output/*
-DeepCE/data/*_ehill.csv
+MultiDCP/output/*
+MultiDCP/data/*
 graphs/*

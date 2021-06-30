@@ -1,0 +1,7 @@
+2021-01-10 06:52:50,115 ADR_Prediction DEBUG the first split
+2021-01-10 16:08:57,761 ADR_Prediction DEBUG the first split
+2021-01-10 16:08:59,180 root DEBUG nozero cols is 5134
+2021-01-10 16:43:24,380 ADR_Prediction DEBUG Predict successfully
+2021-01-10 18:48:08,912 ADR_Prediction DEBUG start 5-fold CV
+2021-01-10 18:48:08,946 ADR_Prediction DEBUG the first split
+2021-01-10 18:48:13,042 root DEBUG nozero cols is 5134

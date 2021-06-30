@@ -1,0 +1,70 @@
+2021-01-19 03:10:29,158 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 03:10:29,158 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 03:10:29,166 ADR_Prediction DEBUG the first split
+2021-01-19 03:10:29,236 ADR_Prediction DEBUG nozero cols is 929
+2021-01-19 03:10:29,236 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:11:17,322 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:11:33,772 ADR_Prediction DEBUG model prediction micro accuracy is 0.7625, macro accuracy is 0.5149
+2021-01-19 03:11:33,773 ADR_Prediction DEBUG the first split
+2021-01-19 03:11:33,864 ADR_Prediction DEBUG nozero cols is 940
+2021-01-19 03:11:33,865 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:12:23,505 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:12:40,108 ADR_Prediction DEBUG model prediction micro accuracy is 0.7738, macro accuracy is 0.5513
+2021-01-19 03:12:40,109 ADR_Prediction DEBUG the first split
+2021-01-19 03:12:40,179 ADR_Prediction DEBUG nozero cols is 899
+2021-01-19 03:12:40,180 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:13:27,771 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:13:43,915 ADR_Prediction DEBUG model prediction micro accuracy is 0.7705, macro accuracy is 0.5436
+2021-01-19 03:13:43,916 ADR_Prediction DEBUG the first split
+2021-01-19 03:13:44,009 ADR_Prediction DEBUG nozero cols is 906
+2021-01-19 03:13:44,010 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 03:14:30,236 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:14:45,000 ADR_Prediction DEBUG model prediction micro accuracy is 0.7745, macro accuracy is 0.5539
+2021-01-19 03:14:45,001 ADR_Prediction DEBUG the first split
+2021-01-19 03:14:45,085 ADR_Prediction DEBUG nozero cols is 945
+2021-01-19 03:14:45,086 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 03:15:34,230 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:15:50,438 ADR_Prediction DEBUG model prediction micro accuracy is 0.7719, macro accuracy is 0.5477
+2021-01-19 03:15:50,438 ADR_Prediction DEBUG model prediction mean micro accuracy is 0.7706, mean macro accuracy is 0.5423
+2021-01-19 03:15:50,439 wandb.sdk.internal.internal INFO Internal process exited
+2021-01-19 03:16:11,231 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 03:16:11,232 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 03:16:11,239 ADR_Prediction DEBUG the first split
+2021-01-19 03:16:11,308 ADR_Prediction DEBUG nozero cols is 929
+2021-01-19 03:16:11,308 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:17:00,536 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:24:16,860 ADR_Prediction DEBUG model prediction micro accuracy is 0.7632, macro accuracy is 0.5200
+2021-01-19 03:24:16,861 ADR_Prediction DEBUG the first split
+2021-01-19 03:24:16,931 ADR_Prediction DEBUG nozero cols is 940
+2021-01-19 03:24:16,931 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:25:05,018 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:27:13,154 ADR_Prediction DEBUG model prediction micro accuracy is 0.7718, macro accuracy is 0.5493
+2021-01-19 03:27:13,156 ADR_Prediction DEBUG the first split
+2021-01-19 03:27:13,246 ADR_Prediction DEBUG nozero cols is 899
+2021-01-19 03:27:13,246 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:28:06,520 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:28:42,793 ADR_Prediction DEBUG model prediction micro accuracy is 0.7696, macro accuracy is 0.5393
+2021-01-19 03:28:42,794 ADR_Prediction DEBUG the first split
+2021-01-19 03:28:42,882 ADR_Prediction DEBUG nozero cols is 906
+2021-01-19 03:28:42,882 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 03:29:32,107 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:30:24,185 ADR_Prediction DEBUG model prediction micro accuracy is 0.7781, macro accuracy is 0.5595
+2021-01-19 03:30:24,186 ADR_Prediction DEBUG the first split
+2021-01-19 03:30:24,256 ADR_Prediction DEBUG nozero cols is 945
+2021-01-19 03:30:24,256 ADR_Prediction DEBUG train data length 8287, test data length 2071
+2021-01-19 03:31:14,701 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:31:31,545 ADR_Prediction DEBUG model prediction micro accuracy is 0.7723, macro accuracy is 0.5455
+2021-01-19 03:31:31,545 ADR_Prediction DEBUG model prediction mean micro accuracy is 0.7710, mean macro accuracy is 0.5427
+2021-01-19 03:31:31,546 wandb.sdk.internal.internal INFO Internal process exited
+2021-01-19 03:32:45,181 ADR_Prediction DEBUG There are 323 drugs
+2021-01-19 03:32:45,181 ADR_Prediction DEBUG start 5-fold CV
+2021-01-19 03:32:45,189 ADR_Prediction DEBUG the first split
+2021-01-19 03:32:45,255 ADR_Prediction DEBUG nozero cols is 929
+2021-01-19 03:32:45,256 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:33:34,667 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:35:16,114 ADR_Prediction DEBUG model prediction micro accuracy is 0.7594, macro accuracy is 0.5109
+2021-01-19 03:35:16,115 ADR_Prediction DEBUG the first split
+2021-01-19 03:35:16,185 ADR_Prediction DEBUG nozero cols is 940
+2021-01-19 03:35:16,185 ADR_Prediction DEBUG train data length 8286, test data length 2072
+2021-01-19 03:36:05,532 ADR_Prediction DEBUG Predict successfully
+2021-01-19 03:42:03,571 wandb.sdk.internal.internal INFO Internal process exited

@@ -1,0 +1,27 @@
+2021-01-10 21:23:19,449 ADR_Prediction DEBUG There are 292 drugs
+2021-01-10 21:23:19,450 ADR_Prediction DEBUG start 5-fold CV
+2021-01-10 21:23:19,461 ADR_Prediction DEBUG the first split
+2021-01-10 21:23:19,789 ADR_Prediction DEBUG nozero cols is 1427
+2021-01-10 21:25:23,110 ADR_Prediction DEBUG There are 292 drugs
+2021-01-10 21:25:23,111 ADR_Prediction DEBUG start 5-fold CV
+2021-01-10 21:25:23,178 ADR_Prediction DEBUG the first split
+2021-01-10 21:25:23,792 ADR_Prediction DEBUG nozero cols is 1427
+2021-01-10 21:52:34,713 ADR_Prediction DEBUG Predict successfully
+2021-01-10 21:53:21,402 ADR_Prediction DEBUG model prediction micro accuracy is 0.8144, macro accuracy is 0.5107
+2021-01-10 21:53:21,403 ADR_Prediction DEBUG the first split
+2021-01-10 21:53:21,921 ADR_Prediction DEBUG nozero cols is 1151
+2021-01-10 22:12:03,567 ADR_Prediction DEBUG Predict successfully
+2021-01-10 22:13:09,075 ADR_Prediction DEBUG model prediction micro accuracy is 0.7958, macro accuracy is 0.4897
+2021-01-10 22:13:09,075 ADR_Prediction DEBUG the first split
+2021-01-10 22:13:09,716 ADR_Prediction DEBUG nozero cols is 1318
+2021-01-10 22:33:39,015 ADR_Prediction DEBUG Predict successfully
+2021-01-10 22:34:56,505 ADR_Prediction DEBUG model prediction micro accuracy is 0.8006, macro accuracy is 0.5019
+2021-01-10 22:34:56,505 ADR_Prediction DEBUG the first split
+2021-01-10 22:34:56,874 ADR_Prediction DEBUG nozero cols is 1236
+2021-01-10 22:53:23,016 ADR_Prediction DEBUG Predict successfully
+2021-01-10 22:54:25,266 ADR_Prediction DEBUG model prediction micro accuracy is 0.8011, macro accuracy is 0.5065
+2021-01-10 22:54:25,267 ADR_Prediction DEBUG the first split
+2021-01-10 22:54:25,610 ADR_Prediction DEBUG nozero cols is 1432
+2021-01-10 23:17:01,161 ADR_Prediction DEBUG Predict successfully
+2021-01-10 23:18:21,292 ADR_Prediction DEBUG model prediction micro accuracy is 0.7995, macro accuracy is 0.5058
+2021-01-10 23:18:21,294 ADR_Prediction DEBUG model prediction mean micro accuracy is 0.8023, mean macro accuracy is 0.5029
