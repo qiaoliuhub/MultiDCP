@@ -32,12 +32,12 @@ start_time = datetime.now()
 parser = argparse.ArgumentParser(description='MultiDCP PreTraining')
 parser.add_argument('--drug_file')
 parser.add_argument('--gene_file')
-parser.add_argument('--dropout')
+parser.add_argument('--dropout', type=float)
 parser.add_argument('--train_file')
 parser.add_argument('--dev_file')
 parser.add_argument('--test_file')
-parser.add_argument('--batch_size')
-parser.add_argument('--max_epoch')
+parser.add_argument('--batch_size', type = int)
+parser.add_argument('--max_epoch', type = int)
 parser.add_argument('--unfreeze_steps', help='The epochs at which each layer is unfrozen, like <<1,2,3,4>>')
 parser.add_argument('--ae_input_file')
 parser.add_argument('--ae_label_file')
@@ -52,12 +52,12 @@ args = parser.parse_args()
 
 drug_file = args.drug_file
 gene_file = args.gene_file
-dropout = float(args.dropout)
+dropout = args.dropout
 gene_expression_file_train = args.train_file
 gene_expression_file_dev = args.dev_file
 gene_expression_file_test = args.test_file
-batch_size = int(args.batch_size)
-max_epoch = int(args.max_epoch)
+batch_size = args.batch_size
+max_epoch = args.max_epoch
 unfreeze_steps = args.unfreeze_steps.split(',')
 assert len(unfreeze_steps) == 4, "number of unfreeze steps should be 4"
 unfreeze_pattern = [False, False, False, False]
