@@ -1,7 +1,0 @@
-Use GPU if it is deep model: True
-Traceback (most recent call last):
-  File "adr_prediction.py", line 74, in <module>
-    cur_model = DeepModel(X_dim = 978, Y_dim = sum(nozero_filter), device = device)
-  File "/workspace/DeepCE/DeepCE/adr_prediction/model_builder.py", line 77, in __init__
-    wandb.watch(model, log="all")
-NameError: name 'model' is not defined

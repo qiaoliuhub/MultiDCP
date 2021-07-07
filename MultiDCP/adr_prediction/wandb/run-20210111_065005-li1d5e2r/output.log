@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "adr_prediction.py", line 90, in <module>
-    cur_model.finish_run()
-  File "/workspace/DeepCE/DeepCE/adr_prediction/model_builder.py", line 82, in finish_run
-    self.run.finish()
-AttributeError: 'Run' object has no attribute 'finish'

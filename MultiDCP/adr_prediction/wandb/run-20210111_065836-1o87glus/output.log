@@ -1,5 +1,0 @@
-Use GPU if it is deep model: True
-Traceback (most recent call last):
-  File "adr_prediction.py", line 90, in <module>
-    cur_model.finish_run()
-AttributeError: 'DeepModel' object has no attribute 'finish_run'
