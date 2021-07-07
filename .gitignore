@@ -1,4 +1,3 @@
-script/wandb/
 *.pyc
 .DS_Store
 .idea/*
@@ -16,3 +15,5 @@ __pycache__/*
 MultiDCP/output/*
 MultiDCP/data/*
 graphs/*
+*history_log*
+*wandb*
