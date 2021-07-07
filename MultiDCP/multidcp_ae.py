@@ -378,7 +378,7 @@ if __name__ == '__main__':
                                 'linear_encoder_flag': args.linear_encoder_flag})
 
     # model creation
-    print('--------------linear: {0!r}--------------'.format(args.linear_encoder_flag))
+    print('--------------with linear encoder: {0!r}--------------'.format(args.linear_encoder_flag))
     model = multidcp.MultiDCP_AE(device=device, model_param_registry=model_param_registry)
     model.init_weights(pretrained = False)
     model.to(device)

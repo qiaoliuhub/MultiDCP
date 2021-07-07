@@ -376,25 +376,35 @@ class MultiDCP_AE(MultiDCPBase):
     def forward(self, input_cell_gex, input_drug = None, input_gene = None, mask = None, 
                 input_pert_idose = None, job_id = 'perturbed', epoch = 0):
         if job_id == 'perturbed':
-            out, cell_hidden_ = self.multidcp(input_drug, input_gene, mask, input_cell_gex,
-                                                input_pert_idose, epoch = epoch)
-            # out = [batch * num_gene * hid_dim]
-            out = self.relu(out)
-            # out = [batch * num_gene * hid_dim]
-            out = self.linear_final(out)
-            # out = [batch * num_gene * 1]
-            out = out.squeeze(2)
-            # out = [batch * num_gene]
-            return out, cell_hidden_
+            return self.perturbed_trans(input_cell_gex, input_drug, input_gene, mask, 
+                        input_pert_idose, epoch)
         else:
-            ## autoencoder
-            hidden = self.guassian_noise(input_cell_gex)
-            # input_cell_gex = [batch * 978]
-            cell_hidden_ = self.multidcp.encoder(hidden)
-            # cell_hidden_ = [batch * cell_id_emb_dim(32)]
-            out = self.decoder_linear(cell_hidden_)
-                       
-            if epoch % 100 == 80:
-                print('---------------------followings are ae after transformer/linear embed in ae-------------------------')
-                print(out)
-            return out, cell_hidden_
+            return self.autoencoder(input_cell_gex, epoch)
+
+    def perturbed_trans(self, input_cell_gex, input_drug, input_gene, mask, 
+                        input_pert_idose, epoch):
+        out, cell_hidden_ = self.multidcp(input_drug, input_gene, mask, input_cell_gex,
+                                                input_pert_idose, epoch = epoch)
+        # out = [batch * num_gene * hid_dim]
+        out = self.relu(out)
+        # out = [batch * num_gene * hid_dim]
+        out = self.linear_final(out)
+        # out = [batch * num_gene * 1]
+        out = out.squeeze(2)
+        # out = [batch * num_gene]
+        return out, cell_hidden_
+
+    def autoencoder(self, input_cell_gex, epoch = 0):
+        ## autoencoder
+        hidden = self.guassian_noise(input_cell_gex)
+        # input_cell_gex = [batch * 978]
+        cell_hidden_ = self.multidcp.encoder(hidden)
+        # cell_hidden_ = [batch * cell_id_emb_dim(32)]
+        out = self.decoder_linear(cell_hidden_)
+                    
+        if epoch % 100 == 80:
+            print('---------------------followings are ae after transformer/linear embed in ae-------------------------')
+            print(out)
+        return out, cell_hidden_
+
+
