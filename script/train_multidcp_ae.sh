@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-CUDA_VISIBLE_DEVICES=1 python ../MultiDCP/multidcp_ae.py --drug_file "../MultiDCP/data/all_drugs_l1000.csv" \
---gene_file "../MultiDCP/data/gene_vector.csv"  --train_file "../MultiDCP/data/pert_transcriptom/signature_train_cell_1_v4.csv" \
+CUDA_VISIBLE_DEVICES=0 python ../MultiDCP/multidcp_ae.py --drug_file "../MultiDCP/data/all_drugs_l1000.csv" \
+--gene_file "../MultiDCP/data/gene_vector.csv"  --train_file "../MultiDCP/data/pert_transcriptom/signature_train_cell_1.csv" \
 --dev_file "../MultiDCP/data/pert_transcriptom/signature_dev_cell_1.csv" --test_file "../MultiDCP/data/pert_transcriptom/signature_test_cell_1.csv" \
---dropout 0.3 --batch_size 64 --max_epoch 500 --unfreeze_steps 0,0,0,0 \
+--dropout 0.3 --batch_size 64 --max_epoch 500 \
 --ae_input_file "../MultiDCP/data/gene_expression_for_ae/gene_expression_combat_norm_978_split4" \
 --ae_label_file "../MultiDCP/data/gene_expression_for_ae/gene_expression_combat_norm_978_split4" \
 --predicted_result_for_testset "../MultiDCP/data/teacher_student/teach_stu_perturbedGX.csv" \
