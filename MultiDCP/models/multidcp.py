@@ -217,7 +217,7 @@ class MultiDCPBase(nn.Module):
         self.multidcp = MultiDCP(device, model_param_registry)
         self.loss_type = model_param_registry['loss_type']
         self.initializer = model_param_registry['initializer']
-        self.device = model_param_registry['device']
+        self.device = device
 
     def init_weights(self, pretrained = False):
         print('Initialized multidcp\'s weight............')

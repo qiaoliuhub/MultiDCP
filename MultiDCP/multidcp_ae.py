@@ -25,7 +25,6 @@ USE_WANDB = False
 PRECISION_DEGREE = [10, 20, 50, 100]
 if USE_WANDB:
     wandb.init(project="MultiDCP_AE_loss")
-    wandb.watch(model, log="all")
 else:
     os.environ["WANDB_MODE"] = "dryrun"
 
@@ -46,7 +45,7 @@ def initialize_model_registry():
     model_param_registry['pert_idose_emb_dim'] = 4
     model_param_registry['hid_dim'] = 128
     model_param_registry['num_gene'] = 978
-    model_param_registry['loss_type'] = 'point_wise_mse' #'point_wise_mse' # 'list_wise_ndcg' #'combine'
+    model_param_registry['loss_type'] = 'point_wise_mse' # 'point_wise_mse' # 'list_wise_ndcg' #'combine'
     model_param_registry['initializer'] = torch.nn.init.kaiming_uniform_
     return model_param_registry
 
@@ -198,7 +197,8 @@ def model_training(args, model, data, ae_data, metrics_summary):
                                 predict_np = predict_np, steps_per_epoch = i+1, 
                                 epoch = epoch, metrics_summary = metrics_summary,
                                 job = 'ae')
-
+        
+        model.train()
         epoch_loss = 0
         for i, (ft, lb, _) in enumerate(data.train_dataloader()):
             drug = ft['drug']
@@ -328,7 +328,7 @@ def model_training(args, model, data, ae_data, metrics_summary):
 if __name__ == '__main__':
     start_time = datetime.now()
 
-    parser = argparse.ArgumentParser(description='MultiDCP PreTraining')
+    parser = argparse.ArgumentParser(description='MultiDCP AE')
     parser.add_argument('--drug_file')
     parser.add_argument('--gene_file')
     parser.add_argument('--train_file')
@@ -338,12 +338,10 @@ if __name__ == '__main__':
     parser.add_argument('--ae_input_file')
     parser.add_argument('--ae_label_file')
     parser.add_argument('--cell_ge_file', help='the file which used to map cell line to gene expression file')
-
     parser.add_argument('--max_epoch', type = int)
     parser.add_argument('--predicted_result_for_testset', help = "the file directory to save the predicted test dataframe")
     parser.add_argument('--hidden_repr_result_for_testset', help = "the file directory to save the test data hidden representation dataframe")
     parser.add_argument('--all_cells')
-
     parser.add_argument('--dropout', type=float)
     parser.add_argument('--linear_encoder_flag', dest = 'linear_encoder_flag', action='store_true', default=False,
                         help = 'whether the cell embedding layer only have linear layers')
@@ -383,6 +381,9 @@ if __name__ == '__main__':
     model.init_weights(pretrained = False)
     model.to(device)
     model = model.double()     
+
+    if USE_WANDB:
+        wandb.watch(model, log="all")
 
     # training
     metrics_summary = defaultdict(
