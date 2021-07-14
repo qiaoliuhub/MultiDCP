@@ -155,14 +155,14 @@ def model_training(args, model, data, hill_data, metrics_summary):
             cell_feature = ft['cell_id']
             pert_idose = ft['pert_idose']
             optimizer.zero_grad()
-            predict, cell_hidden_ = model(drug, hill_data.gene.to(device), mask, pert_type, cell_feature, pert_idose,
+            predict, cell_hidden_ = model(drug, data.gene.to(device), mask, cell_feature, pert_idose,
                                 job_id='perturbed', epoch=epoch)
             loss_t = model.loss(lb, predict)
             loss_t.backward()
             optimizer.step()
             if i == 1:
                 print('__________________________input__________________________')
-                print(cell_id)
+                print(cell_feature)
                 print('__________________________hidden__________________________')
                 print(cell_hidden_)
             epoch_loss += loss.item()

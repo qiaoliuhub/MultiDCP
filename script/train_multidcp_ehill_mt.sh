@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-CUDA_VISIBLE_DEVICES=5 python ../MultiDCP/ehill_multidcp_mt.py --drug_file "../MultiDCP/data/all_drugs_l1000.csv" \
+CUDA_VISIBLE_DEVICES=5 python ../MultiDCP/ehill_multidcp_mt.py \
+--drug_file "../MultiDCP/data/all_drugs_l1000.csv" \
 --gene_file "../MultiDCP/data/gene_vector.csv"  --hill_train_file "../MultiDCP/data/ehill_data/high_confident_data_train.csv" \
 --hill_dev_file "../MultiDCP/data/ehill_data/high_confident_data_dev.csv" \
 --hill_test_file "../MultiDCP/data/ehill_data/high_confident_data_test.csv" \
