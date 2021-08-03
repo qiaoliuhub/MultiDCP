@@ -6,6 +6,7 @@ MultiDCP is multi-tasks transfer learning based model. It is desiged to perform 
 
 # Prerequisites
 Linux
+
 NVIDIA GPU is strongly recommended for speed. CPU is also supported but is slow.
 
 
