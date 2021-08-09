@@ -24,9 +24,16 @@ conda install --file ./conda_requirements.txt
 ```
 
 # Reproducing experiments
-
+1. Download data into MultiDCP/MultiDCP/data
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5172809.svg)](https://doi.org/10.5281/zenodo.5172809)
 ```
-cd multidcp MultiDCP/script/docker_folder
+pip install zenodo-get
+zenodo_get 10.5281/zenodo.5172809
+```
+
+2. 
+```
+cd multidcp MultiDCP/script
 ./train_multidcp_ae.sh
 ```
 
