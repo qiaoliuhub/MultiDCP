@@ -248,7 +248,7 @@ if __name__ == '__main__':
     model_param_registry.update({'num_gene': np.shape(data.gene)[0],
                                 'pert_idose_input_dim': len(DATA_FILTER['pert_idose']),
                                 'dropout': args.dropout, 
-                                'linear_encoder_flag': args.linear_encoder_flag})
+                                'linear_encoder_flag': args.linear_encoder_flag}) 
 
     # model creation
     print('--------------with linear encoder: {0!r}--------------'.format(args.linear_encoder_flag))

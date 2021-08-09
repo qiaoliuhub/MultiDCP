@@ -38,6 +38,7 @@ def model_training(args, model, data, ae_data, metrics_summary):
     for epoch in range(max_epoch):
 
         model.train()
+        print_lr(optimizer)
         epoch_loss = 0
         for i, (ft, lb, _) in enumerate(data.train_dataloader()):
             drug = ft['drug']

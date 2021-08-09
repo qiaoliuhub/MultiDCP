@@ -13,6 +13,7 @@ def initialize_model_registry():
     model_param_registry['gene_emb_dim'] = 128
     model_param_registry['gene_input_dim'] = 128
     model_param_registry['cell_id_input_dim'] = 978
+    model_param_registry['cell_id_emb_dim'] = 50
     model_param_registry['cell_decoder_dim'] = 978 # autoencoder label's dimension
     model_param_registry['pert_idose_emb_dim'] = 4
     model_param_registry['hid_dim'] = 128

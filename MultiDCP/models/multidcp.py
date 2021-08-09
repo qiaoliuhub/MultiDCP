@@ -135,10 +135,10 @@ class MultiDCP(nn.Module):
 
     def __init__(self, device, model_param_registry):
         super(MultiDCP, self).__init__()
-        for k, v in model_param_registry.items():
-            self.__setattr__(k, v)
+        self.set_attr_from_dict(model_param_registry)
         assert self.drug_emb_dim == self.gene_emb_dim, 'Embedding size mismatch'
-        self.drug_fp = NeuralFingerprint(self.drug_input_dim['atom'], self.drug_input_dim['bond'], self.conv_size, self.drug_emb_dim,
+        self.drug_fp = NeuralFingerprint(self.drug_input_dim['atom'], self.drug_input_dim['bond'], 
+                                         self.conv_size, self.drug_emb_dim,
                                          self.degree, device)
         self.gene_embed = nn.Linear(self.gene_input_dim, self.gene_emb_dim)
         self.drug_gene_attn = DrugGeneAttention(self.gene_emb_dim, self.gene_emb_dim, n_layers=2, n_heads=4, pf_dim=512,
@@ -148,14 +148,17 @@ class MultiDCP(nn.Module):
             self.encoder = LinearEncoder(self.cell_id_input_dim)
         else:
             self.encoder = TransformerEncoder(self.cell_id_input_dim)
-        self.cell_id_emb_dim = 50
 
         self.pert_idose_embed = nn.Linear(self.pert_idose_input_dim, self.pert_idose_emb_dim)
         self.linear_dim = self.drug_emb_dim + self.gene_emb_dim + self.cell_id_emb_dim + self.pert_idose_emb_dim
 
         self.linear_1 = nn.Linear(self.linear_dim, self.hid_dim)
         self.relu = nn.ReLU()
-        self.num_gene = self.num_gene
+
+    def set_attr_from_dict(self, model_param_registry):
+
+        for k, v in model_param_registry.items():
+            self.__setattr__(k, v)
 
     def forward(self, input_drug, input_gene, mask, input_cell_gex, input_pert_idose, epoch = 0):
         # input_drug = {'molecules': molecules, 'atom': node_repr, 'bond': edge_repr}
