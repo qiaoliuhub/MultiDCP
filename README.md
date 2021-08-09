@@ -25,6 +25,7 @@ conda install --file ./conda_requirements.txt
 
 # Reproducing experiments
 1. Download data into MultiDCP/MultiDCP/data
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5172809.svg)](https://doi.org/10.5281/zenodo.5172809)
 ```
 pip install zenodo-get
