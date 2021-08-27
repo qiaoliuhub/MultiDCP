@@ -11,14 +11,14 @@ NVIDIA GPU is strongly recommended for speed. CPU is also supported but is slow.
 
 # Docker installation
 ```
-cd multidcp MultiDCP/script/docker_folder
+cd MultiDCP/script/docker_folder
 docker build --network=host -t multidcp .
 nvidia-docker run --name multidcp -it --privileged=true --network=host --rm -v /path/to/MultiDCP/:/workspace multidc
 ```
 
 # Install required packages
 ```
-cd multidcp MultiDCP/script/docker_folder
+cd MultiDCP/script/docker_folder
 pip install -r ./requirements.txt
 conda install --file ./conda_requirements.txt
 ```
@@ -34,7 +34,7 @@ zenodo_get 10.5281/zenodo.5172809
 
 2. 
 ```
-cd multidcp MultiDCP/script
+cd MultiDCP/script
 ./train_multidcp_ae.sh
 ```
 
