@@ -20,11 +20,6 @@ import warnings
 warnings.filterwarnings("ignore")
 from multidcp_ae_utils import *
 
-USE_WANDB = False
-if USE_WANDB:
-    wandb.init(project="MultiDCP_AE_loss")
-else:
-    os.environ["WANDB_MODE"] = "dryrun"
 
 # check cuda
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -257,8 +252,14 @@ if __name__ == '__main__':
     model.to(device)
     model = model.double()     
 
+    USE_WANDB = True
     if USE_WANDB:
+        wandb.init(project="MultiDCP_AE_loss",config=args)
         wandb.watch(model, log="all")
+    else:
+        os.environ["WANDB_MODE"] = "dryrun"
+  
+
 
     # training
     metrics_summary = defaultdict(
